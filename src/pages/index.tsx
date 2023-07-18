@@ -5,9 +5,11 @@ import LeetCode from './components/leetcode';
 import Kitchen from './components/kitchen';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { IngredientType } from '../interfaces/ingredient';
+import { DishType } from '../interfaces/dish';
 
 type propType = {
-  allIngredients: IngredientType[],
+  	allIngredients: IngredientType[],
+	allDishes: DishType[],
 }
 
 const Home = (props: propType) => {
@@ -23,7 +25,7 @@ const Home = (props: propType) => {
           <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("LeetCode")} color={activeComponent==="LeetCode" ? "whiteAlpha.800" : "whiteAlpha.500"}>LeetCode</Heading>
         </Flex>
       </Flex>
-      {activeComponent === "Kitchen" && <Kitchen ingredients={props.allIngredients}/>}
+      {activeComponent === "Kitchen" && <Kitchen ingredients={props.allIngredients} dishes={props.allDishes}/>}
       {activeComponent === "String Manipulation" && <StringManipulation />}
       {activeComponent === "LeetCode" && <LeetCode />}
     </Flex>
@@ -33,19 +35,29 @@ const Home = (props: propType) => {
 export default Home;
 
 export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
-  let res = await fetch("http://localhost:3001/api/ingredients", {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+	let ingredients = await fetch("http://localhost:3001/api/ingredients", {
+		method: "GET",
+		headers: {
+		"Content-Type": "application/json",
+		},
+	});
+	let dishes = await fetch("http://localhost:3001/api/dishes", {
+		method: "GET",
+		headers: {
+		"Content-Type": "application/json",
+		},
+	});
 
-  let responseData = await res.json();
-  const allIngredients = responseData.data;
-  
-  return {
-    props: {
-      allIngredients,
-    }
-  }
+	let ingredientData = await ingredients.json();
+	const allIngredients = ingredientData.data;
+
+	let dishData = await dishes.json();
+	const allDishes = dishData.data;
+	
+	return {
+		props: {
+			allIngredients,
+			allDishes,
+		}
+	}
 }

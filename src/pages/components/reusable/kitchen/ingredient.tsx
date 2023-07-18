@@ -25,7 +25,7 @@ const IngredientComponent = ({ setIngredients, item }: IngredientComponentProps)
 
     return (
         <Flex _hover={{ transform: "scale(1.01)" }} m={5} rounded={15} shadow={"2xl"} p={5} backgroundColor={"blackAlpha.600"} justifyContent={"center"} alignItems={"center"}>
-            <Flex color={"white"} width={"300px"} direction={"column"} p={5} pr={2} position={"relative"}>
+            <Flex color={"white"} width={"300px"} direction={"column"} p={2} pl={5} position={"relative"}>
                 <Popover>
                     <PopoverTrigger>
                             <Button bgColor={"whiteAlpha.700"} position={"absolute"} right={0} top={0} height={"50px"} width={"50px"} rounded={25}>
@@ -44,9 +44,18 @@ const IngredientComponent = ({ setIngredients, item }: IngredientComponentProps)
                     </Portal>
                 </Popover>
                 <Heading size={"md"} p={2} pl={0}>{item.name}</Heading>
-                <Text color={"whiteAlpha.700"}>Category: {item.category}</Text>
-                <Text color={"whiteAlpha.700"}>Nutrition: {item.nutrition}</Text>
-                <Text color={"whiteAlpha.700"}>Details: {item.details}</Text>
+                <Flex alignItems={"center"}>
+                    <Text color={"whiteAlpha.700"} whiteSpace="pre">Category : </Text>
+                    <Text fontSize={18}>{item.category}</Text>
+                </Flex>
+                <Flex alignItems={"center"}>
+                    <Text color={"whiteAlpha.700"} whiteSpace="pre">Nutrition : </Text>
+                    <Text>{item.nutrition}</Text>
+                </Flex>
+                <Flex alignItems={"flex-start"}>
+                    <Text color={"whiteAlpha.700"} whiteSpace="pre">Details : </Text>
+                    <Text>{item.details}</Text>
+                </Flex>
             </Flex>
         </Flex>
     );

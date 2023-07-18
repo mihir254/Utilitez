@@ -1,11 +1,12 @@
-import { Box, Button, Editable, EditableInput, EditablePreview, Flex, Heading, Input, Modal, ModalOverlay, Popover, PopoverArrow, PopoverBody, PopoverCloseButton, PopoverContent, PopoverFooter, PopoverHeader, PopoverTrigger, Portal, Select, Text, Textarea } from "@chakra-ui/react"
+import { Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton } from "@chakra-ui/react"
 import { ChangeEvent, useState } from "react";
 import { IngredientType } from "@/src/interfaces/ingredient";
 import { FaArrowLeftLong, FaPlus } from "react-icons/fa6";
-import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
-import { MdOutlineDone } from "react-icons/md";
-import IngredientComponent from "./ingredient";
+import IngredientComponent from "./reusable/kitchen/ingredient";
 import { DishType } from "@/src/interfaces/dish";
+import DishComponent from "./reusable/kitchen/dish";
+import IngredientFormComponent from "./reusable/kitchen/ingredient-form";
+import DishFormComponent from "./reusable/kitchen/dish-form";
 
 const initialIngredientForm: IngredientType = {
     _id : '',
@@ -15,31 +16,49 @@ const initialIngredientForm: IngredientType = {
     category: '',
 }
 
+const initialDishForm: DishType = {
+    _id: '',
+    name: '',
+    cuisine: '',
+    nutrition: '',
+    preferredMeal: '',
+    ingredients: [],
+}
+
 type propType = {
     ingredients: IngredientType[],
+    dishes: DishType[],
 }
 
 const Kitchen = (props: propType) => {
     const [activeComponent, setActiveComponent] = useState <string> ('');
     const [ingredients, setIngredients] = useState <IngredientType[]> (props.ingredients);
     const [ingredientForm, setIngredientForm] = useState <IngredientType> (initialIngredientForm);
-    const [selectedIngredients, setSelectedIngredients] = useState <string[]> ([]);
 
-    const [dishes, setDishes] = useState <DishType[]> ([]);
+    const [openModal, setOpenModal] = useState <boolean> (false);
+
+    const [dishes, setDishes] = useState <DishType[]> (props.dishes);
+    const [dishForm, setDishForm] = useState <DishType> (initialDishForm);
 
     const [createEntry, setCreateEntry] = useState <boolean> (false);
+    
 
     const updateInput = (event: ChangeEvent<HTMLInputElement>) => {
-        setIngredientForm(prev => {
-            return {
-                ...prev,
-                [event.target.name]: event.target.value    
-            }
-        })
-    }
-
-    const updateSelect = (event: ChangeEvent<HTMLSelectElement>) => {
-        setSelectedIngredients(prev => [...prev, event.target.value]);
+        if (activeComponent === 'Dishes' && !openModal) {
+            setDishForm(prev => {
+                return {
+                    ...prev,
+                    [event.target.name]: event.target.value    
+                }
+            })
+        } else if (activeComponent === 'Ingredients' || openModal) {
+            setIngredientForm(prev => {
+                return {
+                    ...prev,
+                    [event.target.name]: event.target.value    
+                }
+            });
+        }
     }
 
     const handleSaveIngredient = async () => {
@@ -52,13 +71,16 @@ const Kitchen = (props: propType) => {
             setIngredientForm(prev => prev._id = data.message.insertedId);
             setIngredients(prev => [ingredientForm, ...prev]);
         }
-        setCreateEntry(false);
         setIngredientForm(initialIngredientForm);
+        if (openModal) {
+            setOpenModal(false);
+        } else {
+            setCreateEntry(false);
+        }
     }
 
     const handleCancelIngredient = () => {
         setIngredientForm(initialIngredientForm);
-        setSelectedIngredients([]);
         setCreateEntry(false);
     }
 
@@ -66,46 +88,87 @@ const Kitchen = (props: propType) => {
         setCreateEntry(true);
     }
 
+    const handleOptionChange = (selectedValues: string | string[]) => {
+        if (Array.isArray(selectedValues)) {
+            const ingredientMap: { [key: string]: IngredientType } = {};
+                ingredients.forEach((ingredient) => {
+                ingredientMap[ingredient._id] = ingredient;
+            });
+        
+            const newSelectedIngredients: IngredientType[] = selectedValues.map(
+                (val: string) => ingredientMap[val]
+            );
+            
+            setDishForm((prev) => ({
+                ...prev,
+                ingredients: newSelectedIngredients,
+            }));
+        }
+    }; 
+
+    const updateRadio = (selectedOption: "" | "Lunch" | "Breakfast" | "Dinner") => {
+        setDishForm(prev => {
+            return {
+                ...prev,
+                preferredMeal: selectedOption    
+            }
+        })
+    }
+
+    const handleSaveDish = async () => {
+        let res = await fetch("/api/dishes", {
+            method: "POST",
+            body: JSON.stringify(dishForm)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setDishForm(prev => prev._id = data.message.insertedId);
+            setDishes(prev => [dishForm, ...prev]);
+        }
+        setCreateEntry(false);
+        setDishForm(initialDishForm);
+    }
+
     return (
         <Flex pl={2} pr={2} height="calc(100vh - 150px)" position={"relative"}>
+            {openModal ? (
+                <Modal closeOnOverlayClick={false} blockScrollOnMount={false} isOpen={openModal} onClose={() => setOpenModal(false)} isCentered>
+                <ModalOverlay
+                    bg='blackAlpha.300'
+                    backdropFilter='blur(13px) hue-rotate(90deg)'
+                />
+                <ModalContent background={"transparent"}>
+                    <IngredientFormComponent
+                        initialIngredientForm={initialIngredientForm}
+                        ingredientForm={ingredientForm}
+                        handleSaveIngredient={handleSaveIngredient}
+                        updateInput={updateInput}
+                        openModal={openModal}
+                    />
+                    <ModalCloseButton left={7} top={7} size={"md"} color={"white"}/>
+                </ModalContent>
+            </Modal>
+            ) : null}
             {activeComponent === '' ? (
                     <Flex flex={1} justifyContent={"space-evenly"} alignItems={"center"}>
                         <Button onClick={() => setActiveComponent("Ingredients")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }} bgColor={"whiteAlpha.800"} rounded={20} width={"300px"} height={"300px"} justifyContent={"center"} alignItems={"center"} shadow={"xl"}>
-                            <Heading size={"lg"}>ABC</Heading>
+                            <Heading size={"lg"}>INGREDIENTS</Heading>
                         </Button>
                         <Button onClick={() => setActiveComponent("Dishes")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }} bgColor={"whiteAlpha.800"} rounded={20} width={"300px"} height={"300px"} justifyContent={"center"} alignItems={"center"} shadow={"xl"}>
-                            <Heading size={"lg"}>DEF</Heading>
+                            <Heading size={"lg"}>DISHES</Heading>
                         </Button>
                     </Flex>
                 ) : activeComponent === 'Ingredients' ? (
                     <Box maxHeight={"calc(100vh - 150px)"} minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
                         <Flex wrap="wrap" justifyContent={"center"}>
                             {createEntry ? (
-                                <Flex m={5} rounded={15} shadow={"2xl"} p={5} backgroundColor={"blackAlpha.600"} justifyContent={"center"} alignItems={"center"} style={{boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}>
-                                    <Flex color={"white"} width={"300px"} direction={"column"} p={0} pr={2} position={"relative"}>
-                                        <Button disabled={initialIngredientForm === ingredientForm} bgColor={"whiteAlpha.700"} position={"absolute"} right={0} top={0} height={"50px"} width={"50px"} rounded={25}>
-                                            <MdOutlineDone size={20} onClick={handleSaveIngredient}/>
-                                        </Button>
-                                        <Flex direction={"column"}>
-                                            <Flex alignItems={"center"}>
-                                                <Text color="whiteAlpha.800" fontSize={16}>Name: </Text>
-                                                <Input autoFocus fontWeight={"700"} ml={3} width={"150px"} variant={"flushed"} color="white" name='name' value={ingredientForm.name} onChange={updateInput} />
-                                            </Flex>
-                                            <Flex alignItems={"center"}>
-                                                <Text color="whiteAlpha.800" fontSize={16}>Category: </Text>
-                                                <Input ml={3} variant={"flushed"} color="white" name='category' value={ingredientForm.category} onChange={updateInput} />
-                                            </Flex>
-                                            <Flex alignItems={"center"}>
-                                                <Text color="whiteAlpha.800" fontSize={16}>Nutrition: </Text>
-                                                <Input ml={3} variant={"flushed"} color="white" name='nutrition' value={ingredientForm.nutrition} onChange={updateInput} />
-                                            </Flex>
-                                            <Flex alignItems={"center"}>
-                                                <Text color="whiteAlpha.800" fontSize={16}>Details: </Text>
-                                                <Input ml={3} variant={"flushed"} color="white" name='details' value={ingredientForm.details} onChange={updateInput} p={0}/>
-                                            </Flex>
-                                        </Flex>
-                                    </Flex>
-                                </Flex>
+                                <IngredientFormComponent
+                                    initialIngredientForm={initialIngredientForm}
+                                    ingredientForm={ingredientForm}
+                                    handleSaveIngredient={handleSaveIngredient}
+                                    updateInput={updateInput}
+                                    openModal={openModal}
+                                />
                             ) : null}
                             {ingredients && ingredients.map((item, index) => (
                                 <IngredientComponent setIngredients={setIngredients} item={item} key={index}/>
@@ -116,50 +179,19 @@ const Kitchen = (props: propType) => {
                     <Box maxHeight={"calc(100vh - 150px)"} minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
                         <Flex wrap="wrap" justifyContent={"center"}>
                             {createEntry ? (
-                                                                <Flex m={5} rounded={15} shadow={"2xl"} p={5} backgroundColor={"blackAlpha.600"} justifyContent={"center"} alignItems={"center"} style={{boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}>
-
-                                <Flex direction={"column"} minHeight={"500px"} justifyContent={"space-evenly"} width={"90%"} alignItems={"center"}>
-                                    <Flex alignItems={"flex-end"}>
-                                        <Text width={"140px"} color="whiteAlpha.800" fontWeight={"bold"} fontSize={16}>Name: </Text>
-                                        <Input variant={"flushed"} color="white" name='name' value={ingredientForm.name} onChange={updateInput} />
-                                    </Flex>
-                                    <Flex alignItems={"flex-end"}>
-                                        <Text color="whiteAlpha.800" fontWeight={"bold"} fontSize={16} width={"140px"}>Cuisine: </Text>
-                                        <Input variant={"flushed"} color="white" name='category' value={ingredientForm.category} onChange={updateInput} />
-                                    </Flex>
-                                    <Flex alignItems={"flex-end"}>
-                                        <Text color="whiteAlpha.800" fontWeight={"bold"} fontSize={16} width={"140px"}>Nutrition: </Text>
-                                        <Input variant={"flushed"} color="white" name='nutrition' value={ingredientForm.nutrition} onChange={updateInput} />
-                                    </Flex>
-                                    <Flex alignItems={"flex-end"}>
-                                        <Text color="whiteAlpha.800" fontWeight={"bold"} fontSize={16} width={"140px"}>Preferred Meal: </Text>
-                                        <Input variant={"flushed"} color="white" name='nutrition' value={ingredientForm.nutrition} onChange={updateInput} />
-                                    </Flex>
-                                    <Flex alignItems={"flex-end"} width={"100%"}>
-                                        <Text color="whiteAlpha.800" fontWeight={"bold"} fontSize={16} width={"140px"}>Ingredients: </Text>
-                                        <Select placeholder='Select option' variant={"flushed"} onChange={updateSelect}>
-                                            {ingredients.map((ingredient) => (
-                                                <option key={ingredient.id} value={ingredient.name}>
-                                                    {ingredient.name}
-                                                </option>
-                                            ))}
-                                        </Select>
-                                    </Flex>
-                                    <Flex wrap={"wrap"}>
-                                        {selectedIngredients.map((ingredient) => (
-                                            <Button m={2} onClick={() => setSelectedIngredients(prev => prev.filter(ing => ing !== ingredient))}>
-                                                <Text key={ingredient}>{ingredient}</Text>
-                                            </Button>
-                                        ))}
-                                    </Flex>
-                                    <Flex width={"100%"} justifyContent={"space-evenly"}>
-                                        <Button minWidth={"100px"} onClick={handleSaveIngredient}>Save</Button>
-                                        <Button minWidth={"100px"} onClick={handleCancelIngredient}>Cancel</Button>
-                                    </Flex>
-                                </Flex></Flex>
+                                <DishFormComponent
+                                    initialDishForm={initialDishForm}
+                                    dishForm={dishForm}
+                                    handleSaveDish={handleSaveDish}
+                                    updateInput={updateInput}
+                                    updateRadio={updateRadio}
+                                    handleOptionChange={handleOptionChange}
+                                    ingredients={ingredients}
+                                    setOpenModal={setOpenModal}
+                                />
                             ) : null}
                             {dishes && dishes.map((item, index) => (
-                                <Flex></Flex>
+                                <DishComponent setDishes={setDishes} item={item} key={index}/>
                             ))}
                         </Flex>
                     </Box>
