@@ -15,6 +15,7 @@ const createIngredient = async (db: Db, req: NextApiRequest, res: NextApiRespons
         details,
         nutrition,
         category,
+        shoppingList: false,
     }
     let newIngredient = await db?.collection("Ingredients").insertOne(bodyObj);
     res.status(201).json({ message: newIngredient })

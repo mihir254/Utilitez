@@ -16,12 +16,13 @@ const deleteIngredient = async (db: Db, req: NextApiRequest, res: NextApiRespons
 const editIngredient = async (db: Db, req: NextApiRequest, res: NextApiResponse) => {
     const { id } = req.query;
     const objectID = new ObjectId(id as string);
-    const { name, details, nutrition, category } = JSON.parse(req.body);
+    const { name, details, nutrition, category, shoppingList } = JSON.parse(req.body);
     const updateResult = await db?.collection("Ingredients").updateOne(
         { _id: objectID },
-        { $set: { name, details, nutrition, category } }
+        { $set: { name, details, nutrition, category, shoppingList } }
     );
-    if (updateResult.upsertedCount === 1) {
+    console.log("Updated Ingredient: ", updateResult);
+    if (updateResult.modifiedCount === 1) {
         res.status(200).json({ message: "Ingredient updated succesfully" });
     } else {
         res.status(404).json({ message: "Ingredient not found" });

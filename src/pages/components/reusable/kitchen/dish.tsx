@@ -9,7 +9,7 @@ type DishComponentProps = {
     item: DishType;
 };
 
-const DishComponent = ({ setDishes, item }: DishComponentProps) => {
+const DishComponent = (props: DishComponentProps) => {
 
     const handleDeleteDish = async (item: DishType) => {
         let id = item._id;
@@ -17,7 +17,7 @@ const DishComponent = ({ setDishes, item }: DishComponentProps) => {
             method: "DELETE",
         });
         if (res.ok) {
-            setDishes((prev: DishType[]) => prev.filter(dish => dish._id !== id));
+            props.setDishes((prev: DishType[]) => prev.filter(dish => dish._id !== id));
         }
         res = await res.json();
     }
@@ -36,33 +36,33 @@ const DishComponent = ({ setDishes, item }: DishComponentProps) => {
                             <PopoverArrow bgColor={"whiteAlpha.700"}/>
                             <PopoverBody p={0} display={"flex"} flexDirection={"column"} alignItems={"center"}>
                                 <Button width={"100%"} bgColor={"#777"} rounded={0} roundedTop={20}>EDIT</Button>
-                                <Button width={"100%"} bgColor={"#888"} rounded={0} onClick={() => handleDeleteDish(item)}>DELETE</Button>
+                                <Button width={"100%"} bgColor={"#888"} rounded={0} onClick={() => handleDeleteDish(props.item)}>DELETE</Button>
                                 <Button width={"100%"} bgColor={"#999"} rounded={0} roundedBottom={20}>RECIPE</Button>
                             </PopoverBody>
                         </PopoverContent>
                     </Portal>
                 </Popover>
-                <Heading size={"md"} p={2} pl={0}>{item.name}</Heading>
+                <Heading size={"md"} p={2} pl={0}>{props.item.name}</Heading>
                 <Flex alignItems={"center"}>
                     <Text color={"whiteAlpha.700"} whiteSpace="pre">Cuisine : </Text>
-                    <Text fontSize={18}>{item.cuisine}</Text>
+                    <Text fontSize={18}>{props.item.cuisine}</Text>
                 </Flex>
                 <Flex alignItems={"center"}>
                     <Text color={"whiteAlpha.700"} whiteSpace="pre">Nutrition : </Text>
-                    <Text>{item.nutrition}</Text>
+                    <Text>{props.item.nutrition}</Text>
                 </Flex>
                 <Flex alignItems={"center"}>
                     <Text color={"whiteAlpha.700"} whiteSpace="pre">Preferred Meal : </Text>
-                    <Text>{item.preferredMeal}</Text>
+                    <Text>{props.item.preferredMeal}</Text>
                 </Flex>
                 <Divider mt={2} borderColor={"whiteAlpha.300"}/>
                 <Flex alignItems={"flex-start"}>
                     <Text color={"whiteAlpha.700"} whiteSpace="pre">Ingredients : </Text>
                     <Text>
-                        {item.ingredients.map((ingredient, index) => (
+                        {props.item.ingredients.map((ingredient, index) => (
                             <React.Fragment key={ingredient._id}>
                                 {ingredient.name}
-                                {index !== item.ingredients.length - 1 && ', '}
+                                {index !== props.item.ingredients.length - 1 && ', '}
                             </React.Fragment>
                         ))}
                     </Text>

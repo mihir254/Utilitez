@@ -12,7 +12,7 @@ type Proptype = {
     updateRadio: (selectedOption: "" | "Lunch" | "Breakfast" | "Dinner") => void,
     handleOptionChange: (selectedValues: string | string[]) => void,
     ingredients: IngredientType[],
-    setOpenModal: Dispatch<SetStateAction<boolean>>,
+    setOpenIngredientModal: Dispatch<SetStateAction<boolean>>,
 }
 
 const DishFormComponent = (props: Proptype) => {
@@ -50,7 +50,7 @@ const DishFormComponent = (props: Proptype) => {
                         Select Ingredients
                     </MenuButton>
                     <MenuList minWidth="200px" maxHeight={"200px"} overflowY={"scroll"}>
-                        <MenuItem color={"black"} onClick={() => props.setOpenModal(true)}>Add Ingredient</MenuItem>
+                        <MenuItem color={"black"} onClick={() => props.setOpenIngredientModal(true)}>Add Ingredient</MenuItem>
                         <MenuDivider />
                         <MenuOptionGroup type='checkbox' defaultValue={props.dishForm.ingredients.map((ingredient: IngredientType) => ingredient.name)} onChange={props.handleOptionChange}>
                             {props.ingredients.map((ingredient: IngredientType) => (

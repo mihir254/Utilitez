@@ -6,9 +6,11 @@ import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
 type IngredientComponentProps = {
     setIngredients: Dispatch<SetStateAction<IngredientType[]>>;
     item: IngredientType;
+    addToShoppingList: (item: IngredientType) => void;
+    removeFromShoppingList: (item: IngredientType) => void;
 };
 
-const IngredientComponent = ({ setIngredients, item }: IngredientComponentProps) => {
+const IngredientComponent = (props: IngredientComponentProps) => {
 
     const handleDeleteIngredient = async (item: IngredientType) => {
         let id = item._id;
@@ -17,7 +19,7 @@ const IngredientComponent = ({ setIngredients, item }: IngredientComponentProps)
             method: "DELETE",
         });
         if (res.ok) {
-            setIngredients((prev: IngredientType[]) => prev.filter(ingredient => ingredient._id !== id));
+            props.setIngredients((prev: IngredientType[]) => prev.filter(ingredient => ingredient._id !== id));
         }
         res = await res.json();
         console.log(res)
@@ -37,24 +39,25 @@ const IngredientComponent = ({ setIngredients, item }: IngredientComponentProps)
                             <PopoverArrow bgColor={"whiteAlpha.700"}/>
                             <PopoverBody p={0} display={"flex"} flexDirection={"column"} alignItems={"center"}>
                                 <Button width={"100%"} bgColor={"#777"} rounded={0} roundedTop={20}>EDIT</Button>
-                                <Button width={"100%"} bgColor={"#888"} rounded={0} onClick={() => handleDeleteIngredient(item)}>DELETE</Button>
-                                <Button width={"100%"} bgColor={"#999"} rounded={0} roundedBottom={20}>ADD TO LIST</Button>
+                                <Button width={"100%"} bgColor={"#888"} rounded={0} onClick={() => handleDeleteIngredient(props.item)}>DELETE</Button>
+                                {!props.item.shoppingList ? <Button width={"100%"} bgColor={"#999"} rounded={0} roundedBottom={20} onClick={() => props.addToShoppingList(props.item)}>ADD TO LIST</Button> : 
+                                <Button width={"100%"} bgColor={"#999"} rounded={0} roundedBottom={20} onClick={() => props.removeFromShoppingList(props.item)}>REMOVE FROM LIST</Button>}
                             </PopoverBody>
                         </PopoverContent>
                     </Portal>
                 </Popover>
-                <Heading size={"md"} p={2} pl={0}>{item.name}</Heading>
+                <Heading size={"md"} p={2} pl={0}>{props.item.name}</Heading>
                 <Flex alignItems={"center"}>
                     <Text color={"whiteAlpha.700"} whiteSpace="pre">Category : </Text>
-                    <Text fontSize={18}>{item.category}</Text>
+                    <Text fontSize={18}>{props.item.category}</Text>
                 </Flex>
                 <Flex alignItems={"center"}>
                     <Text color={"whiteAlpha.700"} whiteSpace="pre">Nutrition : </Text>
-                    <Text>{item.nutrition}</Text>
+                    <Text>{props.item.nutrition}</Text>
                 </Flex>
                 <Flex alignItems={"flex-start"}>
                     <Text color={"whiteAlpha.700"} whiteSpace="pre">Details : </Text>
-                    <Text>{item.details}</Text>
+                    <Text>{props.item.details}</Text>
                 </Flex>
             </Flex>
         </Flex>

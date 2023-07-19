@@ -4,5 +4,5 @@ export interface IngredientType {
     details: string,
     nutrition: string,
     category: string,
-    [key: string]: string,
+    shoppingList: boolean
 }
