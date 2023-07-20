@@ -11,7 +11,7 @@ type Proptype = {
 
 const ShoppingItemForm = (props: Proptype) => {
     return (
-        <Flex m={5} rounded={15} backgroundColor={"blackAlpha.600"} justifyContent={"space-between"} alignItems={"center"} style={{boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}
+        props.shoppingItemForm && <Flex m={5} rounded={15} backgroundColor={"blackAlpha.600"} justifyContent={"space-between"} alignItems={"center"} style={{boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}
             color={"white"} width={"320px"} height={"65px"} pl={5} pr={5}>
             <Flex alignItems={"center"}>
                 <Input autoFocus width={"200px"} fontWeight={"700"} fontSize={20} variant={"flushed"} color="white" name='itemName' value={props.shoppingItemForm.itemName} onChange={props.updateInput} />
