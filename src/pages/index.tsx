@@ -16,7 +16,7 @@ const Home = (props: propType) => {
   const [activeComponent, setActiveComponent] = useState <string> ('Kitchen');
 
   return (
-    <Flex direction={"column"} minHeight={"100vh"} backgroundColor={"blackAlpha.900"}>
+    props.allDishes && props.allIngredients ? <Flex direction={"column"} minHeight={"100vh"} backgroundColor={"blackAlpha.900"}>
       <Flex userSelect={"none"} height={"145px"} boxShadow={"2xl"} alignItems={"center"} justifyContent={"space-between"} p={10} backgroundColor={"blackAlpha.700"}>
         <Heading color={"whiteAlpha.800"}>Utility Software</Heading>
         <Flex justifyContent={"flex-end"}>
@@ -28,36 +28,44 @@ const Home = (props: propType) => {
       {activeComponent === "Kitchen" && <Kitchen ingredients={props.allIngredients} dishes={props.allDishes}/>}
       {activeComponent === "String Manipulation" && <StringManipulation />}
       {activeComponent === "LeetCode" && <LeetCode />}
-    </Flex>
-  );
+    </Flex> : <Flex><Heading>Something Went Wrong</Heading></Flex>
+  )
 }
 
 export default Home;
 
 export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
-	let ingredients = await fetch("https://utilitez-8eu5.vercel.app/api/ingredients", {
-		method: "GET",
-		headers: {
-		"Content-Type": "application/json",
-		},
-	});
-	let dishes = await fetch("https://utilitez-8eu5.vercel.app/api/dishes", {
-		method: "GET",
-		headers: {
-		"Content-Type": "application/json",
-		},
-	});
+	try {
+		let ingredients = await fetch("https://utilitez.vercel.app/api/ingredients", {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+		let dishes = await fetch("https://utilitez.vercel.app/api/dishes", {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
 
-	let ingredientData = await ingredients.json();
-	const allIngredients = ingredientData.data;
+		let ingredientData = await ingredients.json();
+		const allIngredients = ingredientData.data;
 
-	let dishData = await dishes.json();
-	const allDishes = dishData.data;
-	
-	return {
-		props: {
-			allIngredients,
-			allDishes,
+		let dishData = await dishes.json();
+		const allDishes = dishData.data;
+		
+		return {
+			props: {
+				allIngredients,
+				allDishes,
+			}
+		}
+	} catch (error) {
+		console.log("Something went wrong in getServerProps: ", error);
+		return {
+			props: {
+			}
 		}
 	}
 }
