@@ -36,13 +36,14 @@ export default Home;
 
 export const getServerSideProps: GetServerSideProps = async (context: GetServerSidePropsContext) => {
 	try {
-		let ingredients = await fetch("https://utilitez.vercel.app/api/ingredients", {
+		const server = process.env.SERVER;
+		let ingredients = await fetch(`${server}/api/ingredients`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
 			},
 		});
-		let dishes = await fetch("https://utilitez.vercel.app/api/dishes", {
+		let dishes = await fetch(`${server}/api/dishes`, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
