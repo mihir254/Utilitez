@@ -26,7 +26,7 @@ const IngredientComponent = (props: IngredientComponentProps) => {
     }
 
     return (
-        <Flex _hover={{ transform: "scale(1.01)" }} m={5} rounded={15} shadow={"2xl"} p={5} backgroundColor={"blackAlpha.600"} justifyContent={"center"} alignItems={"center"}>
+        props.item && <Flex _hover={{ transform: "scale(1.01)" }} m={5} rounded={15} shadow={"2xl"} p={5} backgroundColor={"blackAlpha.600"} justifyContent={"center"} alignItems={"center"}>
             <Flex color={"white"} width={"300px"} direction={"column"} p={2} pl={5} position={"relative"}>
                 <Popover>
                     <PopoverTrigger>

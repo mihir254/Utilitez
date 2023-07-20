@@ -11,10 +11,10 @@ let client: MongoClient | null = new MongoClient(uri, options);
 let clientPromise: Promise<MongoClient> | null = null;
 
 if (process.env.NODE_ENV === 'development') {
-  if (!global._mongoClientPromise) {
-    global._mongoClientPromise = client.connect();
+  if (!(global as any)._mongoClientPromise) {
+    (global as any)._mongoClientPromise = client.connect();
   }
-  clientPromise = global._mongoClientPromise;
+  clientPromise = (global as any)._mongoClientPromise;
 } else {
   clientPromise = client.connect();
 }

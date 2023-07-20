@@ -12,30 +12,30 @@ import {BiLike, BiDislike} from "react-icons/bi";
 import ShoppingListItemComponent from "./reusable/kitchen/shopping-list-item";
 import { VscClearAll } from "react-icons/vsc";
 
-const initialIngredientForm: IngredientType = {
-    _id : '',
-    name: '',
-    details: '',
-    nutrition: '',
-    category: '',
-    shoppingList: false,
-}
-
-const initialDishForm: DishType = {
-    _id: '',
-    name: '',
-    cuisine: '',
-    nutrition: '',
-    preferredMeal: '',
-    ingredients: [],
-}
-
 type propType = {
     ingredients: IngredientType[],
     dishes: DishType[],
 }
 
 const Kitchen = (props: propType) => {
+    
+    const initialIngredientForm: IngredientType = {
+        _id : '',
+        name: '',
+        details: '',
+        nutrition: '',
+        category: '',
+        shoppingList: false,
+    }
+    
+    const initialDishForm: DishType = {
+        _id: '',
+        name: '',
+        cuisine: '',
+        nutrition: '',
+        preferredMeal: '',
+        ingredients: [],
+    }
     const [activeComponent, setActiveComponent] = useState <string> ('');
     
     const [ingredients, setIngredients] = useState <IngredientType[]> (props.ingredients);
@@ -76,7 +76,7 @@ const Kitchen = (props: propType) => {
         if (res.ok) {
             const data = await res.json();
             setIngredientForm(prev => prev._id = data.message.insertedId);
-            setIngredients(prev => [ingredientForm, ...prev]);
+            setIngredients(prev => [{ ...ingredientForm, _id:data.message.insertedId }, ...prev]);
         }
         setIngredientForm(initialIngredientForm);
         if (openIngredientModal) {
@@ -130,7 +130,7 @@ const Kitchen = (props: propType) => {
         if (res.ok) {
             const data = await res.json();
             setDishForm(prev => prev._id = data.message.insertedId);
-            setDishes(prev => [dishForm, ...prev]);
+            setDishes(prev => [{...dishForm, _id:data.message.insertedId}, ...prev]);
         }
         setCreateEntry(false);
         setDishForm(initialDishForm);
