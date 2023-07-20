@@ -3,18 +3,21 @@ import { ChangeEvent, useState } from "react";
 import { IngredientType } from "@/src/interfaces/ingredient";
 import { FaArrowLeftLong, FaPlus } from "react-icons/fa6";
 import { BiDish, BiSolidDish } from "react-icons/bi";
-import IngredientComponent from "./reusable/kitchen/ingredient";
+import IngredientComponent from "./reusable/kitchen/ingredient/ingredient";
 import { DishType } from "@/src/interfaces/dish";
-import DishComponent from "./reusable/kitchen/dish";
-import IngredientFormComponent from "./reusable/kitchen/ingredient-form";
-import DishFormComponent from "./reusable/kitchen/dish-form";
+import DishComponent from "./reusable/kitchen/dish/dish";
+import IngredientFormComponent from "./reusable/kitchen/ingredient/ingredient-form";
+import DishFormComponent from "./reusable/kitchen/dish/dish-form";
 import {BiLike, BiDislike} from "react-icons/bi";
-import ShoppingListItemComponent from "./reusable/kitchen/shopping-list-item";
+import ShoppingItemComponent from "./reusable/kitchen/shopping/shopping-item";
 import { VscClearAll } from "react-icons/vsc";
+import ShoppingItemForm from "./reusable/kitchen/shopping/shopping-item-form";
+import { ListItem } from "@/src/interfaces/list-item";
 
 type propType = {
     ingredients: IngredientType[],
     dishes: DishType[],
+    shoppingList: ListItem[],
 }
 
 const Kitchen = (props: propType) => {
@@ -36,6 +39,12 @@ const Kitchen = (props: propType) => {
         preferredMeal: '',
         ingredients: [],
     }
+
+    const initialShoppingItemForm: ListItem = {
+        _id: '',
+        itemName: '',
+    }
+
     const [activeComponent, setActiveComponent] = useState <string> ('');
     
     const [ingredients, setIngredients] = useState <IngredientType[]> (props.ingredients);
@@ -44,7 +53,8 @@ const Kitchen = (props: propType) => {
     const [dishes, setDishes] = useState <DishType[]> (props.dishes);
     const [dishForm, setDishForm] = useState <DishType> (initialDishForm);
 
-    const [shoppingList, setShoppingList] = useState <IngredientType[]> ([]);
+    const [shoppingList, setShoppingList] = useState <ListItem[]> (props.shoppingList);
+    const [shoppingItemForm, setShoppingItemForm] = useState < ListItem > (initialShoppingItemForm);
 
     const [openIngredientModal, setOpenIngredientModal] = useState <boolean> (false);
     const [suggestedDish, setSuggestedDish] = useState <DishType | null> (null);
@@ -65,7 +75,34 @@ const Kitchen = (props: propType) => {
                     [event.target.name]: event.target.value    
                 }
             });
+        } else if (activeComponent === 'Shopping List') {
+            setShoppingItemForm(prev => {
+                return {
+                    ...prev,
+                    [event.target.name]: event.target.value    
+                }
+            });
         }
+    }
+
+    const updateRadio = (selectedOption: "" | "Lunch" | "Breakfast" | "Dinner") => {
+        setDishForm(prev => {
+            return {
+                ...prev,
+                preferredMeal: selectedOption    
+            }
+        })
+    }
+
+    const handleCreateEntry = () => {
+        setCreateEntry(true);
+    }
+
+    const handleBackButton = () => {
+        setActiveComponent('');
+        setCreateEntry(false);
+        setDishForm(initialDishForm);
+        setIngredientForm(initialIngredientForm);
     }
 
     const handleSaveIngredient = async () => {
@@ -75,7 +112,6 @@ const Kitchen = (props: propType) => {
         });
         if (res.ok) {
             const data = await res.json();
-            setIngredientForm(prev => prev._id = data.message.insertedId);
             setIngredients(prev => [{ ...ingredientForm, _id:data.message.insertedId }, ...prev]);
         }
         setIngredientForm(initialIngredientForm);
@@ -89,10 +125,6 @@ const Kitchen = (props: propType) => {
     const handleCancelIngredient = () => {
         setIngredientForm(initialIngredientForm);
         setCreateEntry(false);
-    }
-
-    const handleCreateEntry = () => {
-        setCreateEntry(true);
     }
 
     const handleOptionChange = (selectedValues: string | string[]) => {
@@ -111,16 +143,7 @@ const Kitchen = (props: propType) => {
                 ingredients: newSelectedIngredients,
             }));
         }
-    }; 
-
-    const updateRadio = (selectedOption: "" | "Lunch" | "Breakfast" | "Dinner") => {
-        setDishForm(prev => {
-            return {
-                ...prev,
-                preferredMeal: selectedOption    
-            }
-        })
-    }
+    };
 
     const handleSaveDish = async () => {
         let res = await fetch("/api/dishes", {
@@ -129,18 +152,10 @@ const Kitchen = (props: propType) => {
         });
         if (res.ok) {
             const data = await res.json();
-            setDishForm(prev => prev._id = data.message.insertedId);
             setDishes(prev => [{...dishForm, _id:data.message.insertedId}, ...prev]);
         }
         setCreateEntry(false);
         setDishForm(initialDishForm);
-    }
-
-    const handleBackButton = () => {
-        setActiveComponent('');
-        setCreateEntry(false);
-        setDishForm(initialDishForm);
-        setIngredientForm(initialIngredientForm);
     }
 
     const handleSelectRandomDish = () => {
@@ -165,52 +180,89 @@ const Kitchen = (props: propType) => {
         setSuggestedDish(randomDish);
     }
 
-    const addToShoppingList = async (item: IngredientType) => {
-        let res = await fetch(`/api/ingredients/${item._id}`, {
-            method: "PUT",
-            body: JSON.stringify({...item, shoppingList: true})
+    const addIngredientToShoppingList = async (item: IngredientType) => {
+        const ingredientToAdd: ListItem = { _id: item._id, itemName: item.name };
+        let shoppingListResult = await fetch("/api/shopping-list", {
+            method: "POST",
+            body: JSON.stringify(ingredientToAdd)
         });
-        if (res.ok) {
-            const data = await res.json();
-            console.log(data);
-            setIngredients(previousIngredients => {
-                const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
-                    if (ingredient._id === item._id) {
-                        return {...item, shoppingList: true}
-                    } else {
-                        return ingredient
-                    }
-                });
-                return upgradedIngredients;
+        if (shoppingListResult.ok) {
+            setShoppingList(previousList => [...previousList, ingredientToAdd]);
+            let res = await fetch(`/api/ingredients/${item._id}`, {
+                method: "PUT",
+                body: JSON.stringify({...item, shoppingList: true})
             });
-            setShoppingList(previousList => [...previousList, {...item, shoppingList: true}]);
+            if (res.ok) {
+                const data = await res.json();
+                console.log(data);
+                setIngredients(previousIngredients => {
+                    const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                        if (ingredient._id === item._id) {
+                            return {...item, shoppingList: true}
+                        } else {
+                            return ingredient
+                        }
+                    });
+                    return upgradedIngredients;
+                });
+            }
+        }
+    }
+    
+    const removeIngredientFromShoppingList = async (item: IngredientType) => {
+        let shoppingListResult = await fetch(`/api/shopping-list/${item._id}`, {
+            method: "DELETE",
+        });
+        if (shoppingListResult.ok) {
+            setShoppingList(previousList => previousList.filter((listItem: ListItem) => listItem._id !== item._id));
+            let res = await fetch(`/api/ingredients/${item._id}`, {
+                method: "PUT",
+                body: JSON.stringify({...item, shoppingList: false})
+            });
+            if (res.ok) {
+                const data = await res.json();
+                console.log(data);
+                setIngredients(previousIngredients => {
+                    const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                        if (ingredient._id === item._id) {
+                            return {...item, shoppingList: false}
+                        } else {
+                            return ingredient
+                        }
+                    });
+                    return upgradedIngredients;
+                });
+            }
         }
     }
 
-    const removeFromShoppingList = async (item: IngredientType) => {
-        let res = await fetch(`/api/ingredients/${item._id}`, {
+    const handleClearShoppingList = async () => {
+        let res = await fetch(`/api/shopping-list`, {
             method: "PUT",
-            body: JSON.stringify({...item, shoppingList: false})
         });
         if (res.ok) {
             const data = await res.json();
-            console.log(data);
-            setIngredients(previousIngredients => {
-                const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
-                    if (ingredient._id === item._id) {
-                        return {...item, shoppingList: false}
-                    } else {
-                        return ingredient
-                    }
-                });
-                return upgradedIngredients;
-            });
-            setShoppingList(previousList => previousList.filter((listItem: IngredientType) => listItem._id !== item._id));
+            console.log(data.message);
+            ingredients.forEach((ingredient: IngredientType) => {
+                if (ingredient.shoppingList) {
+                    ingredient.shoppingList = false;
+                }
+            })
+            setShoppingList([]);
         }
     }
 
-    const handleClearShoppingList = () => {
-        setShoppingList([]);
+    const handleSaveListItem = async () => {
+        let res = await fetch("/api/shopping-list", {
+            method: "POST",
+            body: JSON.stringify(shoppingItemForm)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setShoppingList(prev => [{...shoppingItemForm, _id:data.message.insertedId}, ...prev]);
+        }
+        setCreateEntry(false);
+        setShoppingItemForm(initialShoppingItemForm);
     }
 
     return (
@@ -277,7 +329,7 @@ const Kitchen = (props: propType) => {
                                 />
                             ) : null}
                             {ingredients && ingredients.map((item, index) => (
-                                <IngredientComponent setIngredients={setIngredients} item={item} key={index} addToShoppingList={addToShoppingList} removeFromShoppingList={removeFromShoppingList}/>
+                                <IngredientComponent setIngredients={setIngredients} item={item} key={index} addIngredientToShoppingList={addIngredientToShoppingList} removeFromShoppingList={removeIngredientFromShoppingList}/>
                             ))}
                         </Flex>
                     </Box>
@@ -304,8 +356,15 @@ const Kitchen = (props: propType) => {
                 ) : activeComponent === "Shopping List" ? (
                     <Box maxHeight={"calc(100vh - 150px)"} minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
                         <Flex wrap="wrap" justifyContent={"center"}>
+                            {createEntry ? (
+                                <ShoppingItemForm
+                                    shoppingItemForm={shoppingItemForm}
+                                    updateInput={updateInput}
+                                    handleSaveListItem={handleSaveListItem}
+                                />
+                            ) : null}
                             {shoppingList && shoppingList.map((item, index) => (
-                                <ShoppingListItemComponent item={item} key={index}/>
+                                <ShoppingItemComponent item={item} key={index}/>
                             ))}
                         </Flex>
                     </Box>

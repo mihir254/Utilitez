@@ -6,10 +6,12 @@ import Kitchen from './components/kitchen';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { IngredientType } from '../interfaces/ingredient';
 import { DishType } from '../interfaces/dish';
+import { ListItem } from '../interfaces/list-item';
 
 type propType = {
   	allIngredients: IngredientType[],
 	allDishes: DishType[],
+	allListItems: ListItem[],
 }
 
 const Home = (props: propType) => {
@@ -22,10 +24,10 @@ const Home = (props: propType) => {
         <Flex justifyContent={"flex-end"}>
           <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("Kitchen")} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}>Kitchen</Heading>
           <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("String Manipulation")} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}>String Manipulation</Heading>
-          <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("LeetCode")} color={activeComponent==="LeetCode" ? "whiteAlpha.800" : "whiteAlpha.500"}>LeetCode</Heading>
+          {/* <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("LeetCode")} color={activeComponent==="LeetCode" ? "whiteAlpha.800" : "whiteAlpha.500"}>LeetCode</Heading> */}
         </Flex>
       </Flex>
-      {activeComponent === "Kitchen" && <Kitchen ingredients={props.allIngredients} dishes={props.allDishes}/>}
+      {activeComponent === "Kitchen" && <Kitchen ingredients={props.allIngredients} dishes={props.allDishes} shoppingList={props.allListItems}/>}
       {activeComponent === "String Manipulation" && <StringManipulation />}
       {activeComponent === "LeetCode" && <LeetCode />}
     </Flex> : <Flex><Heading>Something Went Wrong</Heading></Flex>
@@ -49,17 +51,27 @@ export const getServerSideProps: GetServerSideProps = async (context: GetServerS
 				"Content-Type": "application/json",
 			},
 		});
+		let listItems = await fetch(`${server}/api/shopping-list`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
 
 		let ingredientData = await ingredients.json();
 		const allIngredients = ingredientData.data;
 
 		let dishData = await dishes.json();
 		const allDishes = dishData.data;
+
+		let listItemData = await listItems.json();
+		const allListItems = listItemData.data;
 		
 		return {
 			props: {
 				allIngredients,
 				allDishes,
+				allListItems,
 			}
 		}
 	} catch (error) {
