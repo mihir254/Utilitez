@@ -1,8 +1,9 @@
-import { Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton } from "@chakra-ui/react"
+import { Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton, Tooltip } from "@chakra-ui/react"
 import { ChangeEvent, useState } from "react";
 import { IngredientType } from "@/src/interfaces/ingredient";
 import { FaArrowLeftLong, FaPlus } from "react-icons/fa6";
 import { BiDish, BiSolidDish } from "react-icons/bi";
+import { MdOutlineSelectAll, MdOutlineDeselect } from 'react-icons/md';
 import IngredientComponent from "./reusable/kitchen/ingredient/ingredient";
 import { DishType } from "@/src/interfaces/dish";
 import DishComponent from "./reusable/kitchen/dish/dish";
@@ -13,6 +14,9 @@ import ShoppingItemComponent from "./reusable/kitchen/shopping/shopping-item";
 import { VscClearAll } from "react-icons/vsc";
 import ShoppingItemForm from "./reusable/kitchen/shopping/shopping-item-form";
 import { ListItem } from "@/src/interfaces/list-item";
+import { BsBag } from "react-icons/bs";
+import { FiFilter } from "react-icons/fi";
+import FilterForm from "./reusable/kitchen/dish/filter-form";
 
 type propType = {
     ingredients: IngredientType[],
@@ -29,6 +33,7 @@ const Kitchen = (props: propType) => {
         nutrition: '',
         category: '',
         shoppingList: false,
+        isSelected: false,
     }
     
     const initialDishForm: DishType = {
@@ -45,6 +50,11 @@ const Kitchen = (props: propType) => {
         itemName: '',
     }
 
+    const initialFilterForm: { ingredients: IngredientType[] } = {
+        // cuisine: '',
+        ingredients: [],
+    }
+
     const [activeComponent, setActiveComponent] = useState <string> ('');
     
     const [ingredients, setIngredients] = useState <IngredientType[]> (props.ingredients);
@@ -55,6 +65,12 @@ const Kitchen = (props: propType) => {
 
     const [shoppingList, setShoppingList] = useState <ListItem[]> (props.shoppingList);
     const [shoppingItemForm, setShoppingItemForm] = useState < ListItem > (initialShoppingItemForm);
+
+    const [selectedIngredients, setSelectedIngredients] = useState <IngredientType[]> ([]);
+    const [isSelection, setIsSelection] = useState <boolean> (false);
+
+    const [openFilterModal, setOpenFilterModal] = useState <boolean> (false);
+    const [filterForm, setFilterForm] = useState <{ ingredients: IngredientType[] }> (initialFilterForm);
 
     const [openIngredientModal, setOpenIngredientModal] = useState <boolean> (false);
     const [suggestedDish, setSuggestedDish] = useState <DishType | null> (null);
@@ -103,6 +119,7 @@ const Kitchen = (props: propType) => {
         setCreateEntry(false);
         setDishForm(initialDishForm);
         setIngredientForm(initialIngredientForm);
+        setIsSelection(false);
     }
 
     const handleSaveIngredient = async () => {
@@ -138,10 +155,17 @@ const Kitchen = (props: propType) => {
                 (val: string) => ingredientMap[val]
             );
             
-            setDishForm((prev) => ({
-                ...prev,
-                ingredients: newSelectedIngredients,
-            }));
+            if (activeComponent === "Dishes" && !openFilterModal) {
+                setDishForm((prev) => ({
+                    ...prev,
+                    ingredients: newSelectedIngredients,
+                }));
+            } else if (activeComponent === "Dishes" && openFilterModal) {
+                setFilterForm((prev) => ({
+                    ...prev,
+                    ingredients: newSelectedIngredients,
+                }));
+            }
         }
     };
 
@@ -225,7 +249,7 @@ const Kitchen = (props: propType) => {
                 setIngredients(previousIngredients => {
                     const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
                         if (ingredient._id === item._id) {
-                            return {...item, shoppingList: false}
+                            return {...ingredient, shoppingList: false}
                         } else {
                             return ingredient
                         }
@@ -265,6 +289,96 @@ const Kitchen = (props: propType) => {
         setShoppingItemForm(initialShoppingItemForm);
     }
 
+    const handleRemoveListItem = async (item: ListItem) => {
+        let shoppingListResult = await fetch(`/api/shopping-list/${item._id}`, {
+            method: "DELETE",
+        });
+        if (shoppingListResult.ok) {
+            setShoppingList(previousList => previousList.filter((listItem: ListItem) => listItem._id !== item._id));
+            const ingredientListItem = ingredients.find((ingredient: IngredientType) => ingredient._id === item._id);
+            if (ingredientListItem) {
+                let res = await fetch(`/api/ingredients/${item._id}`, {
+                    method: "PUT",
+                    body: JSON.stringify({...ingredientListItem, shoppingList: false})
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log(data);
+                    setIngredients(previousIngredients => {
+                        const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                            if (ingredient._id === item._id) {
+                                return {...ingredientListItem, shoppingList: false}
+                            } else {
+                                return ingredient
+                            }
+                        });
+                        return upgradedIngredients;
+                    });
+                }
+            }
+        }
+    }
+
+    const handleIngredientSelection = (item: IngredientType) => {
+        console.log(item);
+        if (item.isSelected) {
+            setIngredients(previousIngredients => {
+                const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                    if (ingredient._id === item._id) {
+                        return {...item, isSelected: false}
+                    } else {
+                        return ingredient
+                    }
+                });
+                return upgradedIngredients;
+            });
+            setSelectedIngredients(prev => prev.filter((ingredient: IngredientType) => ingredient._id !== item._id));
+        } else {
+            setIngredients(previousIngredients => {
+                const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                    if (ingredient._id === item._id) {
+                        return {...item, isSelected: true}
+                    } else {
+                        return ingredient
+                    }
+                });
+                return upgradedIngredients;
+            });
+            setSelectedIngredients(prev => [...prev, item]);
+        }
+    }
+
+    const handleDeselectButton = () => {
+        setIsSelection(false);
+        setSelectedIngredients([]);
+        setIngredients(previousIngredients => {
+            const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                return {...ingredient, isSelected: false}
+            });
+            return upgradedIngredients;
+        });
+    }
+
+    const handleMultipleIngredientsToList = () => {
+
+    }
+
+    const handleFilter = () => {
+        setOpenFilterModal(true);
+    }
+
+    const handleSaveFilter = () => {
+        console.log(filterForm.ingredients);
+        setOpenFilterModal(false);
+    }
+
+    const handleClearFilter = () => {
+        setFilterForm((prev) => ({
+            ...prev,
+            ingredients: [],
+        }));
+    }
+
     return (
         <Flex pl={2} pr={2} height="calc(100vh - 150px)" position={"relative"}>
             {openIngredientModal ? (
@@ -282,6 +396,24 @@ const Kitchen = (props: propType) => {
                         openIngredientModal={openIngredientModal}
                     />
                     <ModalCloseButton left={7} top={7} size={"md"} color={"white"}/>
+                </ModalContent>
+            </Modal>
+            ) : null}
+            {openFilterModal ? (
+                <Modal closeOnOverlayClick={false} blockScrollOnMount={false} isOpen={openFilterModal} onClose={() => setOpenFilterModal(false)} isCentered>
+                <ModalOverlay
+                    bg='blackAlpha.300'
+                    backdropFilter='blur(13px) hue-rotate(90deg)'
+                />
+                <ModalContent background={"transparent"}>
+                    <FilterForm
+                        ingredients={ingredients}
+                        filterForm={filterForm}
+                        handleSaveFilter={handleSaveFilter}
+                        handleClearFilter={handleClearFilter}
+                        handleOptionChange={handleOptionChange}
+                    />
+                    <ModalCloseButton size={"md"} color={"white"}/>
                 </ModalContent>
             </Modal>
             ) : null}
@@ -329,7 +461,15 @@ const Kitchen = (props: propType) => {
                                 />
                             ) : null}
                             {ingredients && ingredients.map((item, index) => (
-                                <IngredientComponent setIngredients={setIngredients} item={item} key={index} addIngredientToShoppingList={addIngredientToShoppingList} removeFromShoppingList={removeIngredientFromShoppingList}/>
+                                <IngredientComponent
+                                    setIngredients={setIngredients}
+                                    item={item}
+                                    key={index}
+                                    addIngredientToShoppingList={addIngredientToShoppingList}
+                                    handleRemoveListItem={handleRemoveListItem}
+                                    isSelection={isSelection}
+                                    handleIngredientSelection={handleIngredientSelection}
+                                />
                             ))}
                         </Flex>
                     </Box>
@@ -364,63 +504,102 @@ const Kitchen = (props: propType) => {
                                 />
                             ) : null}
                             {shoppingList && shoppingList.map((item, index) => (
-                                <ShoppingItemComponent item={item} key={index}/>
+                                <ShoppingItemComponent item={item} key={index} handleRemoveListItem={handleRemoveListItem}/>
                             ))}
                         </Flex>
                     </Box>
                 ) : null}
             {activeComponent !== '' ? (
-                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"20px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleBackButton}>
-                    <FaArrowLeftLong size={25}/>
-                </Button>
+                <Tooltip label="Menu">
+                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"20px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleBackButton}>
+                        <FaArrowLeftLong size={25}/>
+                    </Button>
+                </Tooltip>
+            ) : null}
+            {activeComponent === 'Ingredients' ? !isSelection ? (
+                <Tooltip label="Select Multiple">
+                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={() => setIsSelection(true)}>
+                        <MdOutlineSelectAll size={30}/>
+                    </Button>
+                </Tooltip>
+            ) : (
+                <>
+                    <Tooltip label="End Selection">
+                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleDeselectButton}>
+                            <MdOutlineDeselect size={30}/>
+                        </Button>
+                    </Tooltip>
+                    <Tooltip label="Add to Shopping List">
+                        <Button isDisabled={selectedIngredients.length===0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleMultipleIngredientsToList}>
+                            <BsBag size={30}/>
+                        </Button>
+                    </Tooltip>
+                </>
             ) : null}
             {activeComponent === 'Dishes' ? (
-                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectRandomDish}>
-                    <BiDish size={30}/>
-                </Button>
+                <Tooltip label="Filter">
+                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
+                        <FiFilter size={30}/>
+                    </Button>
+                </Tooltip>
             ) : null}
             {activeComponent === 'Dishes' ? (
-                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectTimedRandomDish}>
-                    <BiSolidDish size={30}/>
-                </Button>
+                <Tooltip label="Random Dish">
+                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectRandomDish}>
+                        <BiDish size={30}/>
+                    </Button>
+                </Tooltip>
+            ) : null}
+            {activeComponent === 'Dishes' ? (
+                <Tooltip label="Filtered Random Dish">
+                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"260px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectTimedRandomDish}>
+                        <BiSolidDish size={30}/>
+                    </Button>
+                </Tooltip>
             ) : null}
             {activeComponent === 'Shopping List' ? (
-                <Button isDisabled={shoppingList.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleClearShoppingList}>
-                    <VscClearAll size={30}/>
-                </Button>
+                <Tooltip label="Delete All">
+                    <Button isDisabled={shoppingList.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleClearShoppingList}>
+                        <VscClearAll size={30}/>
+                    </Button>
+                </Tooltip>
             ) : null}
             {activeComponent !== '' ? (
                 <>
                     {createEntry ? (
-                        <Button
-                            _hover={{ transform: "scale(1.02)" }}
-                            bgColor={"white"}
-                            shadow={"xl"}
-                            position={"absolute"}
-                            top={5}
-                            right={7}
-                            height={"60px"}
-                            width={"60px"}
-                            rounded={30}
-                            onClick={handleCancelIngredient}
-                        >
-                            <FaPlus size={25} style={{ transform : "rotate(45deg)" }}/>
-                        </Button>
+                        <Tooltip label="Cancel">
+                            <Button
+                                _hover={{ transform: "scale(1.02)" }}
+                                bgColor={"white"}
+                                shadow={"xl"}
+                                position={"absolute"}
+                                top={5}
+                                right={7}
+                                height={"60px"}
+                                width={"60px"}
+                                rounded={30}
+                                onClick={handleCancelIngredient}
+                            >
+                                <FaPlus size={25} style={{ transform : "rotate(45deg)" }}/>
+                            </Button>
+                        </Tooltip>
                         ) : (
-                        <Button
-                            _hover={{ transform: "scale(1.02)" }}
-                            bgColor={"white"}
-                            shadow={"xl"}
-                            position={"absolute"}
-                            top={5}
-                            right={7}
-                            height={"60px"}
-                            width={"60px"}
-                            rounded={30}
-                            onClick={handleCreateEntry}
-                        >
-                            <FaPlus size={25}/>
-                        </Button>
+                        <Tooltip label="New" openDelay={300}>
+                            <Button
+                                _hover={{ transform: "scale(1.02)" }}
+                                bgColor={"white"}
+                                shadow={"xl"}
+                                position={"absolute"}
+                                top={5}
+                                right={7}
+                                height={"60px"}
+                                width={"60px"}
+                                rounded={30}
+                                onClick={handleCreateEntry}
+                            >
+                                <FaPlus size={25}/>
+                            </Button>
+                        </Tooltip>
                     )}
                 </>
             ) : null}

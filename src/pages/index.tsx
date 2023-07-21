@@ -59,7 +59,12 @@ export const getServerSideProps: GetServerSideProps = async (context: GetServerS
 		});
 
 		let ingredientData = await ingredients.json();
-		const allIngredients = ingredientData.data;
+		const incompleteIngredients = ingredientData.data;
+
+		const allIngredients = incompleteIngredients.map((ingredient: IngredientType) => ({
+			...ingredient,
+			isSelected: false,
+		  }));
 
 		let dishData = await dishes.json();
 		const allDishes = dishData.data;

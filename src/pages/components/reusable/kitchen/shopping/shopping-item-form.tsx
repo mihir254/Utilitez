@@ -16,8 +16,8 @@ const ShoppingItemForm = (props: Proptype) => {
             <Flex alignItems={"center"}>
                 <Input autoFocus width={"200px"} fontWeight={"700"} fontSize={20} variant={"flushed"} color="white" name='itemName' value={props.shoppingItemForm.itemName} onChange={props.updateInput} />
             </Flex>
-            <Button bgColor={"white"} height={"50px"} width={"50px"} rounded={25}>
-                <MdOutlineDone size={20} onClick={props.handleSaveListItem}/>
+            <Button bgColor={"white"} height={"50px"} width={"50px"} rounded={25} onClick={props.handleSaveListItem}>
+                <MdOutlineDone size={20}/>
             </Button>
         </Flex>
     )

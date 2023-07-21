@@ -18,8 +18,8 @@ type Proptype = {
 const DishFormComponent = (props: Proptype) => {
     return (
         props.dishForm && <Flex maxWidth={"400px"} direction={"column"} color={"white"} position={"relative"} m={5} rounded={15} p={5} backgroundColor={"blackAlpha.600"} alignItems={"flex-start"} justifyContent={"center"} style={{boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}>
-            <Button isDisabled={props.initialDishForm === props.dishForm} bgColor={"white"} position={"absolute"} right={5} top={5} height={"50px"} width={"50px"} rounded={25}>
-                <MdOutlineDone size={20} onClick={props.handleSaveDish}/>
+            <Button onClick={props.handleSaveDish} isDisabled={props.initialDishForm === props.dishForm} bgColor={"white"} position={"absolute"} right={5} top={5} height={"50px"} width={"50px"} rounded={25}>
+                <MdOutlineDone size={20}/>
             </Button>
             <Flex width={"80%"} alignItems={"center"}>
                 <Text width={"100px"} color="whiteAlpha.800" fontSize={16}>Name: </Text> 
