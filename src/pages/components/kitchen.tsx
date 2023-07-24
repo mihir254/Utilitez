@@ -120,6 +120,7 @@ const Kitchen = (props: propType) => {
         setDishForm(initialDishForm);
         setIngredientForm(initialIngredientForm);
         setIsSelection(false);
+        handleDeselectButton();
     }
 
     const handleSaveIngredient = async () => {
@@ -145,6 +146,7 @@ const Kitchen = (props: propType) => {
     }
 
     const handleOptionChange = (selectedValues: string | string[]) => {
+        console.log(selectedValues);
         if (Array.isArray(selectedValues)) {
             const ingredientMap: { [key: string]: IngredientType } = {};
                 ingredients.forEach((ingredient) => {
@@ -320,7 +322,6 @@ const Kitchen = (props: propType) => {
     }
 
     const handleIngredientSelection = (item: IngredientType) => {
-        console.log(item);
         if (item.isSelected) {
             setIngredients(previousIngredients => {
                 const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
@@ -359,8 +360,38 @@ const Kitchen = (props: propType) => {
         });
     }
 
-    const handleMultipleIngredientsToList = () => {
-
+    const handleMultipleIngredientsToList = async () => {
+        const ingredientsToAdd: Array<ListItem> = selectedIngredients.map((ingredient: IngredientType) => ({ _id: ingredient._id, itemName: ingredient.name }));
+        let shoppingListResult = await fetch("/api/shopping-list", {
+            method: "POST",
+            body: JSON.stringify(ingredientsToAdd)
+        });
+        if (shoppingListResult.ok) {
+            setShoppingList(previousList => [...previousList, ...ingredientsToAdd]);
+            let res = await fetch(`/api/ingredients`, {
+                method: "PUT",
+                body: JSON.stringify(selectedIngredients)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                console.log(data);
+                const idsToUpdate = selectedIngredients.map((ingredient: IngredientType) => ingredient._id);
+                setIngredients(previousIngredients => {
+                    const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                        if (idsToUpdate.includes(ingredient._id)) {
+                            return {...ingredient, shoppingList: true}
+                        } else {
+                            return ingredient
+                        }
+                    });
+                    return upgradedIngredients;
+                });
+                setSelectedIngredients([]);
+                setIsSelection(false);
+            }
+        }
+        console.log("here")
+        handleDeselectButton();
     }
 
     const handleFilter = () => {
@@ -368,11 +399,26 @@ const Kitchen = (props: propType) => {
     }
 
     const handleSaveFilter = () => {
-        console.log(filterForm.ingredients);
+        const filteredDishes: Array<DishType> = [];
+        dishes.forEach((dish: DishType) => {
+            let count = 0;
+            dish.ingredients.forEach((ingredient: IngredientType) => {
+                filterForm.ingredients.forEach((selectedIngredient: IngredientType) => {
+                    if (ingredient._id === selectedIngredient._id) {
+                        count++;
+                    }
+                })
+            })
+            if (count === filterForm.ingredients.length){
+                filteredDishes.push(dish);
+            }
+        });
+        setDishes(filteredDishes);
         setOpenFilterModal(false);
     }
 
     const handleClearFilter = () => {
+        setDishes(props.dishes);
         setFilterForm((prev) => ({
             ...prev,
             ingredients: [],

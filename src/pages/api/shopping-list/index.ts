@@ -1,6 +1,7 @@
 import clientPromise from '@/src/lib/mongodb';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Db, ObjectId } from "mongodb";
+import { ListItem } from '@/src/interfaces/list-item';
 
 const clearShoppingList = async (db: Db, req: NextApiRequest, res: NextApiResponse) => {
     const filter = { shoppingList: true };
@@ -16,13 +17,20 @@ const getAllListItems = async (db: Db, req: NextApiRequest, res: NextApiResponse
 }
 
 const createListItem = async (db: Db, req: NextApiRequest, res: NextApiResponse) => {
-    const {_id, itemName } = JSON.parse(req.body);
-    let bodyObj = {
-        _id: _id === '' ?  new ObjectId() : new ObjectId(_id as string),
-        itemName
+    const incomingData = JSON.parse(req.body);
+    if (Array.isArray(incomingData)) {
+        const insertItems = incomingData.map((item: ListItem) => ({_id: new ObjectId(item._id as string), itemName: item.itemName}));
+        let newListItems = await db?.collection("Shopping List").insertMany(insertItems);
+        res.status(201).json({ message: newListItems })
+    } else {
+        const {_id, itemName } = incomingData;
+        let bodyObj = {
+            _id: _id === '' ?  new ObjectId() : new ObjectId(_id as string),
+            itemName
+        }
+        let newListItem = await db?.collection("Shopping List").insertOne(bodyObj);
+        res.status(201).json({ message: newListItem })
     }
-    let newListItem = await db?.collection("Shopping List").insertOne(bodyObj);
-    res.status(201).json({ message: newListItem })
 }
 
 

@@ -11,7 +11,7 @@ type Proptype = {
 
 const FilterForm = (props: Proptype) => {
     return (
-        <Flex bgColor={"black"} color={"white"} p={5} rounded={25} justifyContent={"center"} alignItems={"center"} direction={"column"}>
+        props.filterForm && <Flex bgColor={"black"} color={"white"} p={5} rounded={25} justifyContent={"center"} alignItems={"center"} direction={"column"}>
             <Flex justifyContent={"center"} alignItems={"center"}>
                 <Text color="whiteAlpha.800" fontSize={16}>Ingredients: </Text>
                 <Menu colorScheme="blackAlpha.600" closeOnSelect={false} closeOnBlur={true}>
@@ -19,7 +19,7 @@ const FilterForm = (props: Proptype) => {
                         Select Ingredients
                     </MenuButton>
                     <MenuList minWidth="200px" maxHeight={"200px"} overflowY={"scroll"}>
-                        <MenuOptionGroup type='checkbox' defaultValue={props.filterForm.ingredients.map((ingredient: IngredientType) => ingredient.name)} onChange={props.handleOptionChange}>
+                        <MenuOptionGroup type='checkbox' value={props.filterForm.ingredients.map((ingredient: IngredientType) => ingredient._id)} onChange={props.handleOptionChange}>
                             {props.ingredients.map((ingredient: IngredientType) => (
                                 <MenuItemOption borderBottom={"1px solid silver"} key={ingredient._id} value={ingredient._id} color={"black"}>
                                     <Flex>{ingredient.name}</Flex>
