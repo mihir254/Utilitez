@@ -33,9 +33,8 @@ const StringManipulation = () => {
     
     return (
         <Flex flex={1} justifyContent={"center"} alignItems={"center"} direction={"column"}>
-        <Card width={"600px"} p={10} justifyContent={"space-around"} alignItems={"center"} mb={10} backgroundColor={"blackAlpha.900"}>
-            <Stack spacing='5'>
-              <Box>
+        <Flex direction={"column"} width={{md: "600px", base: "350px"}} p={10} justifyContent={"space-around"} alignItems={"center"} mb={10} backgroundColor={"blackAlpha.900"}>
+              <Box width={{md: "400px", base: "250px"}}>
                   <Flex direction={"column"}>
                       <FormControl mr={20} mb={5}>
                           <FormLabel
@@ -63,14 +62,13 @@ const StringManipulation = () => {
                       </FormControl>
                   </Flex>
               </Box>
-              <Flex>
-                <Button width={"100px"} onClick={runPython} backgroundColor={"#666"} mr={10} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>PY</Button>
-                <Button width={"150px"} onClick={runTypeScript} colorScheme="teal" mr={10}>TS</Button>
-                <Button width={"100px"} onClick={refreshScreen} backgroundColor={"#666"} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>Refresh</Button>
+              <Flex mt={10} direction={{md: "row", base: "column"}} justifyContent={"space-evenly"} alignItems={"center"}>
+                <Button mt={{md: 0, base: 5}} width={"100px"} onClick={runPython} backgroundColor={"#666"} mr={{md: 10, base: 0}} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>PY</Button>
+                <Button mt={{md: 0, base: 5}} width={"150px"} onClick={runTypeScript} colorScheme="teal" mr={{md: 10, base: 0}}>TS</Button>
+                <Button mt={{md: 0, base: 5}} width={"100px"} onClick={refreshScreen} backgroundColor={"#666"} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>Refresh</Button>
               </Flex>
-            </Stack>
-        </Card>
-        <Card width={"600px"} p={10} justifyContent={"space-around"} alignItems={"center"} backgroundColor={"blackAlpha.900"}>
+        </Flex>
+        <Card width={{md: "600px", base: "350px"}} p={10} justifyContent={"space-around"} alignItems={"center"} backgroundColor={"blackAlpha.900"}>
           <Heading color={"whiteAlpha.800"} size={"md"}>{answer}</Heading>
         </Card>
       </Flex>

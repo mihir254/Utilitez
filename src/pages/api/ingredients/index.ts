@@ -25,7 +25,7 @@ const createIngredient = async (db: Db, req: NextApiRequest, res: NextApiRespons
 const editMultipleIngredients = async (db: Db, req: NextApiRequest, res: NextApiResponse) => {
     const ingredients = JSON.parse(req.body);
     const objectIDs = ingredients.map((ingredient: IngredientType) => new ObjectId(ingredient._id as string));
-    const updateResult = await db?.collection("Ingredients").updateOne(
+    const updateResult = await db?.collection("Ingredients").updateMany(
         { _id: { $in: objectIDs } },
         { $set: { shoppingList: true } }
     );

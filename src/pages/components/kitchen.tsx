@@ -1,5 +1,5 @@
-import { Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton, Tooltip } from "@chakra-ui/react"
-import { ChangeEvent, useState } from "react";
+import { Text, Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton, Tooltip, useDisclosure, AlertDialog, AlertDialogBody, AlertDialogCloseButton, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Hide, Show } from "@chakra-ui/react"
+import { ChangeEvent, useRef, useState } from "react";
 import { IngredientType } from "@/src/interfaces/ingredient";
 import { FaArrowLeftLong, FaPlus } from "react-icons/fa6";
 import { BiDish, BiSolidDish } from "react-icons/bi";
@@ -74,7 +74,10 @@ const Kitchen = (props: propType) => {
 
     const [openIngredientModal, setOpenIngredientModal] = useState <boolean> (false);
     const [suggestedDish, setSuggestedDish] = useState <DishType | null> (null);
-    const [createEntry, setCreateEntry] = useState <boolean> (false);    
+    const [createEntry, setCreateEntry] = useState <boolean> (false);
+
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const cancelRef = useRef(null);
 
     const updateInput = (event: ChangeEvent<HTMLInputElement>) => {
         if (activeComponent === 'Dishes' && !openIngredientModal) {
@@ -189,16 +192,17 @@ const Kitchen = (props: propType) => {
         setSuggestedDish(randomDish);
     }
 
-    const handleSelectTimedRandomDish = () => {
+    const handleSelectFilteredRandomDish = () => {
         const currentTime = new Date();
         const hour = currentTime.getHours();
-        let timedMenu: Array<DishType> = []
+        let timedMenu: Array<DishType> = [];
+        const parentDishesArray: Array<DishType> = dishes.length > 0 ? dishes : props.dishes;
         if (6 <= hour && hour <= 11) {
-            timedMenu = dishes.filter((dish: DishType) => dish.preferredMeal === "Breakfast");
+            timedMenu = parentDishesArray.filter((dish: DishType) => dish.preferredMeal === "Breakfast");
         } else if (12 <= hour && hour <= 16) {
-            timedMenu = dishes.filter((dish: DishType) => dish.preferredMeal === "Lunch");
+            timedMenu = parentDishesArray.filter((dish: DishType) => dish.preferredMeal === "Lunch");
         } else if (17 <= hour && hour <= 23) {
-            timedMenu = dishes.filter((dish: DishType) => dish.preferredMeal === "Dinner");
+            timedMenu = parentDishesArray.filter((dish: DishType) => dish.preferredMeal === "Dinner");
         } else {
             console.log("Bad time to eat!")
         }
@@ -361,36 +365,38 @@ const Kitchen = (props: propType) => {
     }
 
     const handleMultipleIngredientsToList = async () => {
-        const ingredientsToAdd: Array<ListItem> = selectedIngredients.map((ingredient: IngredientType) => ({ _id: ingredient._id, itemName: ingredient.name }));
-        let shoppingListResult = await fetch("/api/shopping-list", {
-            method: "POST",
-            body: JSON.stringify(ingredientsToAdd)
-        });
-        if (shoppingListResult.ok) {
-            setShoppingList(previousList => [...previousList, ...ingredientsToAdd]);
-            let res = await fetch(`/api/ingredients`, {
-                method: "PUT",
-                body: JSON.stringify(selectedIngredients)
+        const ingredientsToAdd: Array<ListItem> = selectedIngredients
+            .filter((ingredient: IngredientType) => !ingredient.shoppingList)
+            .map((ingredient: IngredientType) => ({ _id: ingredient._id, itemName: ingredient.name }));
+        if (ingredientsToAdd.length > 0) {
+            let shoppingListResult = await fetch("/api/shopping-list", {
+                method: "POST",
+                body: JSON.stringify(ingredientsToAdd)
             });
-            if (res.ok) {
-                const data = await res.json();
-                console.log(data);
-                const idsToUpdate = selectedIngredients.map((ingredient: IngredientType) => ingredient._id);
-                setIngredients(previousIngredients => {
-                    const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
-                        if (idsToUpdate.includes(ingredient._id)) {
-                            return {...ingredient, shoppingList: true}
-                        } else {
-                            return ingredient
-                        }
-                    });
-                    return upgradedIngredients;
+            if (shoppingListResult.ok) {
+                setShoppingList(previousList => [...previousList, ...ingredientsToAdd]);
+                let res = await fetch(`/api/ingredients`, {
+                    method: "PUT",
+                    body: JSON.stringify(selectedIngredients)
                 });
-                setSelectedIngredients([]);
-                setIsSelection(false);
+                if (res.ok) {
+                    const data = await res.json();
+                    const idsToUpdate = selectedIngredients.map((ingredient: IngredientType) => ingredient._id);
+                    setIngredients(previousIngredients => {
+                        const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                            if (idsToUpdate.includes(ingredient._id)) {
+                                return {...ingredient, shoppingList: true}
+                            } else {
+                                return ingredient
+                            }
+                        });
+                        return upgradedIngredients;
+                    });
+                    setSelectedIngredients([]);
+                    setIsSelection(false);
+                }
             }
         }
-        console.log("here")
         handleDeselectButton();
     }
 
@@ -400,7 +406,7 @@ const Kitchen = (props: propType) => {
 
     const handleSaveFilter = () => {
         const filteredDishes: Array<DishType> = [];
-        dishes.forEach((dish: DishType) => {
+        props.dishes.forEach((dish: DishType) => {
             let count = 0;
             dish.ingredients.forEach((ingredient: IngredientType) => {
                 filterForm.ingredients.forEach((selectedIngredient: IngredientType) => {
@@ -426,7 +432,7 @@ const Kitchen = (props: propType) => {
     }
 
     return (
-        <Flex pl={2} pr={2} height="calc(100vh - 150px)" position={"relative"}>
+        <Flex pl={2} pr={2} height="calc(100vh - 150px)" position={"relative"} direction={"column"}>
             {openIngredientModal ? (
                 <Modal closeOnOverlayClick={false} blockScrollOnMount={false} isOpen={openIngredientModal} onClose={() => setOpenIngredientModal(false)} isCentered>
                 <ModalOverlay
@@ -474,24 +480,151 @@ const Kitchen = (props: propType) => {
                         <Flex alignItems={"center"} direction={"column"}>
                             <Heading mb={5} size={"lg"} color={"whiteAlpha.700"}>SUGGESTED DISH</Heading>
                             <Heading mb={5}>{suggestedDish.name}</Heading>
-                            <BiLike cursor={"pointer"} size={25} style={{ position:"absolute", right: "40px", bottom: "10px" }}/>
-                            <BiDislike cursor={"pointer"} size={25} style={{ position:"absolute", right: "10px", bottom: "10px" }}/>
+                            <BiLike cursor={"pointer"} size={25} style={{ position:"absolute", right: "40px", top: "10px" }}/>
+                            <BiDislike cursor={"pointer"} size={25} style={{ position:"absolute", right: "10px", top: "10px" }}/>
                         </Flex>
                     </Flex>
                     <ModalCloseButton left={3} top={3} size={"md"} color={"white"}/>
                 </ModalContent>
             </Modal>
             ) : null}
+            {activeComponent !== "" ? 
+                <Show breakpoint='(max-width: 530px)'>
+                    <Box mt={2} mb={2} display={"flex"} flexDirection={"row"} justifyContent={"space-between"}>
+                        {activeComponent !== '' ? (
+                            <Tooltip label="Menu">
+                                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={handleBackButton}>
+                                    <FaArrowLeftLong size={25}/>
+                                </Button>
+                            </Tooltip>
+                        ) : null}
+                        {activeComponent === 'Ingredients' ? !isSelection ? (
+                            <Tooltip label="Select Multiple">
+                                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={() => setIsSelection(true)}>
+                                    <MdOutlineSelectAll size={30}/>
+                                </Button>
+                            </Tooltip>
+                        ) : (
+                            <>
+                                <Tooltip label="End Selection">
+                                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={handleDeselectButton}>
+                                        <MdOutlineDeselect size={30}/>
+                                    </Button>
+                                </Tooltip>
+                                <Tooltip label="Add to Shopping List">
+                                    <Button isDisabled={selectedIngredients.length===0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"}height={"60px"} width={"60px"} rounded={30} onClick={handleMultipleIngredientsToList}>
+                                        <BsBag size={30}/>
+                                    </Button>
+                                </Tooltip>
+                            </>
+                        ) : null}
+                        {activeComponent === 'Dishes' ? (
+                            <Tooltip label="Filter">
+                                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
+                                    <FiFilter size={30}/>
+                                </Button>
+                            </Tooltip>
+                        ) : null}
+                        {activeComponent === 'Dishes' ? (
+                            <Tooltip label="Random Dish">
+                                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectRandomDish}>
+                                    <BiDish size={30}/>
+                                </Button>
+                            </Tooltip>
+                        ) : null}
+                        {activeComponent === 'Dishes' ? (
+                            <Tooltip label="Filtered Random Dish">
+                                <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectFilteredRandomDish}>
+                                    <BiSolidDish size={30}/>
+                                </Button>
+                            </Tooltip>
+                        ) : null}
+                        {activeComponent === 'Shopping List' ? (
+                            <Tooltip label="Delete All">
+                                <>
+                                <Button isDisabled={shoppingList.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={onOpen}>
+                                    <VscClearAll size={30}/>
+                                </Button>
+                                <AlertDialog
+                                    motionPreset='slideInBottom'
+                                    leastDestructiveRef={cancelRef}
+                                    onClose={onClose}
+                                    isOpen={isOpen}
+                                    isCentered
+                                >
+                                    <AlertDialogOverlay />
+                                    <AlertDialogContent>
+                                    <AlertDialogHeader>Clear Shopping List?</AlertDialogHeader>
+                                    <AlertDialogCloseButton />
+                                    <AlertDialogBody>
+                                        Are you sure you want to discard all of your items from the shopping list?
+                                    </AlertDialogBody>
+                                    <AlertDialogFooter>
+                                        <Button ref={cancelRef} onClick={onClose}>
+                                        No
+                                        </Button>
+                                        <Button colorScheme='red' ml={3} onClick={() => {handleClearShoppingList(); onClose();}}>
+                                        Yes
+                                        </Button>
+                                    </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                                </>
+                            </Tooltip>
+                        ) : null}
+                        {activeComponent !== '' ? (
+                            <>
+                                {createEntry ? (
+                                    <Tooltip label="Cancel">
+                                        <Button
+                                        justifySelf={"flex-end"}
+                                            _hover={{ transform: "scale(1.02)" }}
+                                            bgColor={"white"}
+                                            shadow={"xl"}
+                                            height={"60px"}
+                                            width={"60px"}
+                                            rounded={30}
+                                            onClick={handleCancelIngredient}
+                                        >
+                                            <FaPlus size={25} style={{ transform : "rotate(45deg)" }}/>
+                                        </Button>
+                                    </Tooltip>
+                                    ) : (
+                                    <Tooltip label="New" openDelay={300}>
+                                        <Button
+                                            _hover={{ transform: "scale(1.02)" }}
+                                            bgColor={"white"}
+                                            shadow={"xl"}
+                                            height={"60px"}
+                                            width={"60px"}
+                                            rounded={30}
+                                            onClick={handleCreateEntry}
+                                        >
+                                            <FaPlus size={25}/>
+                                        </Button>
+                                    </Tooltip>
+                                )}
+                            </>
+                        ) : null}
+                    </Box>
+                </Show>
+            : null}
             {activeComponent === '' ? (
-                    <Flex flex={1} justifyContent={"space-evenly"} alignItems={"center"}>
-                        <Button onClick={() => setActiveComponent("Ingredients")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }} bgColor={"whiteAlpha.800"} rounded={20} width={"300px"} height={"300px"} justifyContent={"center"} alignItems={"center"} shadow={"xl"}>
-                            <Heading size={"lg"}>INGREDIENTS</Heading>
+                    <Flex flex={1} justifyContent={"space-evenly"} alignItems={"center"} direction={{ md: "row", base: "column" }}>
+                        <Button onClick={() => setActiveComponent("Ingredients")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
+                            bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
+                            alignItems={"center"} shadow={"xl"}>
+                            <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>INGREDIENTS</Heading>
                         </Button>
-                        <Button onClick={() => setActiveComponent("Dishes")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }} bgColor={"whiteAlpha.800"} rounded={20} width={"300px"} height={"300px"} justifyContent={"center"} alignItems={"center"} shadow={"xl"}>
-                            <Heading size={"lg"}>DISHES</Heading>
+                        <Button onClick={() => setActiveComponent("Dishes")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
+                            bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
+                            alignItems={"center"} shadow={"xl"}>
+                            <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>DISHES</Heading>
                         </Button>
-                        <Button onClick={() => setActiveComponent("Shopping List")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }} bgColor={"whiteAlpha.800"} rounded={20} width={"300px"} height={"300px"} justifyContent={"center"} alignItems={"center"} shadow={"xl"}>
-                            <Heading size={"lg"}>SHOPPING LIST</Heading>
+                        <Button onClick={() => setActiveComponent("Shopping List")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
+                            bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
+                            alignItems={"center"} shadow={"xl"}>
+                            <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>SHOPPING LIST</Heading>
                         </Button>
                     </Flex>
                 ) : activeComponent === 'Ingredients' ? (
@@ -555,100 +688,128 @@ const Kitchen = (props: propType) => {
                         </Flex>
                     </Box>
                 ) : null}
-            {activeComponent !== '' ? (
-                <Tooltip label="Menu">
-                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"20px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleBackButton}>
-                        <FaArrowLeftLong size={25}/>
-                    </Button>
-                </Tooltip>
-            ) : null}
-            {activeComponent === 'Ingredients' ? !isSelection ? (
-                <Tooltip label="Select Multiple">
-                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={() => setIsSelection(true)}>
-                        <MdOutlineSelectAll size={30}/>
-                    </Button>
-                </Tooltip>
-            ) : (
-                <>
-                    <Tooltip label="End Selection">
-                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleDeselectButton}>
-                            <MdOutlineDeselect size={30}/>
+            <Hide breakpoint='(max-width: 530px)'>
+                {activeComponent !== '' ? (
+                    <Tooltip label="Menu">
+                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"20px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleBackButton}>
+                            <FaArrowLeftLong size={25}/>
                         </Button>
                     </Tooltip>
-                    <Tooltip label="Add to Shopping List">
-                        <Button isDisabled={selectedIngredients.length===0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleMultipleIngredientsToList}>
-                            <BsBag size={30}/>
+                ) : null}
+                {activeComponent === 'Ingredients' ? !isSelection ? (
+                    <Tooltip label="Select Multiple">
+                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={() => setIsSelection(true)}>
+                            <MdOutlineSelectAll size={30}/>
                         </Button>
                     </Tooltip>
-                </>
-            ) : null}
-            {activeComponent === 'Dishes' ? (
-                <Tooltip label="Filter">
-                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
-                        <FiFilter size={30}/>
-                    </Button>
-                </Tooltip>
-            ) : null}
-            {activeComponent === 'Dishes' ? (
-                <Tooltip label="Random Dish">
-                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectRandomDish}>
-                        <BiDish size={30}/>
-                    </Button>
-                </Tooltip>
-            ) : null}
-            {activeComponent === 'Dishes' ? (
-                <Tooltip label="Filtered Random Dish">
-                    <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"260px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectTimedRandomDish}>
-                        <BiSolidDish size={30}/>
-                    </Button>
-                </Tooltip>
-            ) : null}
-            {activeComponent === 'Shopping List' ? (
-                <Tooltip label="Delete All">
-                    <Button isDisabled={shoppingList.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleClearShoppingList}>
-                        <VscClearAll size={30}/>
-                    </Button>
-                </Tooltip>
-            ) : null}
-            {activeComponent !== '' ? (
-                <>
-                    {createEntry ? (
-                        <Tooltip label="Cancel">
-                            <Button
-                                _hover={{ transform: "scale(1.02)" }}
-                                bgColor={"white"}
-                                shadow={"xl"}
-                                position={"absolute"}
-                                top={5}
-                                right={7}
-                                height={"60px"}
-                                width={"60px"}
-                                rounded={30}
-                                onClick={handleCancelIngredient}
-                            >
-                                <FaPlus size={25} style={{ transform : "rotate(45deg)" }}/>
+                ) : (
+                    <>
+                        <Tooltip label="End Selection">
+                            <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleDeselectButton}>
+                                <MdOutlineDeselect size={30}/>
                             </Button>
                         </Tooltip>
-                        ) : (
-                        <Tooltip label="New" openDelay={300}>
-                            <Button
-                                _hover={{ transform: "scale(1.02)" }}
-                                bgColor={"white"}
-                                shadow={"xl"}
-                                position={"absolute"}
-                                top={5}
-                                right={7}
-                                height={"60px"}
-                                width={"60px"}
-                                rounded={30}
-                                onClick={handleCreateEntry}
-                            >
-                                <FaPlus size={25}/>
+                        <Tooltip label="Add to Shopping List">
+                            <Button isDisabled={selectedIngredients.length===0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleMultipleIngredientsToList}>
+                                <BsBag size={30}/>
                             </Button>
                         </Tooltip>
-                    )}
-                </>
-            ) : null}
+                    </>
+                ) : null}
+                {activeComponent === 'Dishes' ? (
+                    <Tooltip label="Filter">
+                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
+                            <FiFilter size={30}/>
+                        </Button>
+                    </Tooltip>
+                ) : null}
+                {activeComponent === 'Dishes' ? (
+                    <Tooltip label="Random Dish">
+                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectRandomDish}>
+                            <BiDish size={30}/>
+                        </Button>
+                    </Tooltip>
+                ) : null}
+                {activeComponent === 'Dishes' ? (
+                    <Tooltip label="Filtered Random Dish">
+                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"260px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectFilteredRandomDish}>
+                            <BiSolidDish size={30}/>
+                        </Button>
+                    </Tooltip>
+                ) : null}
+                {activeComponent === 'Shopping List' ? (
+                    <Tooltip label="Delete All">
+                        <>
+                        <Button isDisabled={shoppingList.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={onOpen}>
+                            <VscClearAll size={30}/>
+                        </Button>
+                        <AlertDialog
+                            motionPreset='slideInBottom'
+                            leastDestructiveRef={cancelRef}
+                            onClose={onClose}
+                            isOpen={isOpen}
+                            isCentered
+                        >
+                            <AlertDialogOverlay />
+                            <AlertDialogContent>
+                            <AlertDialogHeader>Clear Shopping List?</AlertDialogHeader>
+                            <AlertDialogCloseButton />
+                            <AlertDialogBody>
+                                Are you sure you want to discard all of your items from the shopping list?
+                            </AlertDialogBody>
+                            <AlertDialogFooter>
+                                <Button ref={cancelRef} onClick={onClose}>
+                                No
+                                </Button>
+                                <Button colorScheme='red' ml={3} onClick={() => {handleClearShoppingList(); onClose();}}>
+                                Yes
+                                </Button>
+                            </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        </>
+                    </Tooltip>
+                ) : null}
+                {activeComponent !== '' ? (
+                    <>
+                        {createEntry ? (
+                            <Tooltip label="Cancel">
+                                <Button
+                                    _hover={{ transform: "scale(1.02)" }}
+                                    bgColor={"white"}
+                                    shadow={"xl"}
+                                    position={"absolute"}
+                                    top={5}
+                                    right={7}
+                                    height={"60px"}
+                                    width={"60px"}
+                                    rounded={30}
+                                    onClick={handleCancelIngredient}
+                                >
+                                    <FaPlus size={25} style={{ transform : "rotate(45deg)" }}/>
+                                </Button>
+                            </Tooltip>
+                            ) : (
+                            <Tooltip label="New" openDelay={300}>
+                                <Button
+                                    _hover={{ transform: "scale(1.02)" }}
+                                    bgColor={"white"}
+                                    shadow={"xl"}
+                                    position={"absolute"}
+                                    top={5}
+                                    right={7}
+                                    height={"60px"}
+                                    width={"60px"}
+                                    rounded={30}
+                                    onClick={handleCreateEntry}
+                                >
+                                    <FaPlus size={25}/>
+                                </Button>
+                            </Tooltip>
+                        )}
+                    </>
+                ) : null}
+            </Hide>
         </Flex>
     )
 }
