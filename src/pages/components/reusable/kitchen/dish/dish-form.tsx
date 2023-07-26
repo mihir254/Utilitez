@@ -17,7 +17,7 @@ type Proptype = {
 
 const DishFormComponent = (props: Proptype) => {
     return (
-        props.dishForm && <Flex maxWidth={"400px"} direction={"column"} color={"white"} position={"relative"} m={5} rounded={15} p={5} backgroundColor={"blackAlpha.600"} alignItems={"flex-start"} justifyContent={"center"} style={{boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}>
+        props.dishForm && <Flex maxWidth={{md: "400px", base: "350px"}} direction={"column"} color={"white"} position={"relative"} m={5} rounded={15} p={5} backgroundColor={"blackAlpha.600"} alignItems={"flex-start"} justifyContent={"center"} style={{boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}>
             <Button onClick={props.handleSaveDish} isDisabled={props.initialDishForm === props.dishForm} bgColor={"white"} position={"absolute"} right={5} top={5} height={"50px"} width={"50px"} rounded={25}>
                 <MdOutlineDone size={20}/>
             </Button>
@@ -33,10 +33,10 @@ const DishFormComponent = (props: Proptype) => {
                 <Text width={"100px"} color="whiteAlpha.800" fontSize={16}>Nutrition: </Text> 
                 <Input fontWeight={"700"} variant={"flushed"} name="nutrition" value={props.dishForm.nutrition} onChange={props.updateInput}/>
             </Flex>
-            <Flex alignItems={"center"}>
+            <Flex alignItems={"center"} mt={3}>
                 <Text width={"100px"} color="whiteAlpha.800" fontSize={16}>Preferred Meal: </Text> 
                 <RadioGroup onChange={props.updateRadio} value={props.dishForm.preferredMeal} colorScheme="">
-                    <Stack direction='row'>
+                    <Stack direction='row' wrap={"wrap"}>
                         <Radio value='Breakfast'>Breakfast</Radio>
                         <Radio value='Lunch'>Lunch</Radio>
                         <Radio value='Dinner'>Dinner</Radio>

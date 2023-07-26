@@ -33,7 +33,7 @@ const StringManipulation = () => {
     
     return (
         <Flex flex={1} justifyContent={"center"} alignItems={"center"} direction={"column"}>
-        <Flex direction={"column"} width={{md: "600px", base: "350px"}} p={10} justifyContent={"space-around"} alignItems={"center"} mb={10} backgroundColor={"blackAlpha.900"}>
+        <Flex rounded={25} m={10} direction={"column"} width={{md: "600px", base: "350px"}} p={10} justifyContent={"space-around"} alignItems={"center"} mb={10} backgroundColor={"blackAlpha.900"}>
               <Box width={{md: "400px", base: "250px"}}>
                   <Flex direction={"column"}>
                       <FormControl mr={20} mb={5}>
@@ -68,9 +68,9 @@ const StringManipulation = () => {
                 <Button mt={{md: 0, base: 5}} width={"100px"} onClick={refreshScreen} backgroundColor={"#666"} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>Refresh</Button>
               </Flex>
         </Flex>
-        <Card width={{md: "600px", base: "350px"}} p={10} justifyContent={"space-around"} alignItems={"center"} backgroundColor={"blackAlpha.900"}>
+        <Flex rounded={25} m={5} width={{md: "600px", base: "350px"}} p={10} justifyContent={"space-around"} alignItems={"center"} backgroundColor={"blackAlpha.900"}>
           <Heading color={"whiteAlpha.800"} size={"md"}>{answer}</Heading>
-        </Card>
+        </Flex>
       </Flex>
     )
 }

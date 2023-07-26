@@ -1,4 +1,4 @@
-import { Text, Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton, Tooltip, useDisclosure, AlertDialog, AlertDialogBody, AlertDialogCloseButton, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Hide, Show } from "@chakra-ui/react"
+import { Text, Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton, Tooltip, useDisclosure, AlertDialog, AlertDialogBody, AlertDialogCloseButton, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Hide, Show, IconButton } from "@chakra-ui/react"
 import { ChangeEvent, useRef, useState } from "react";
 import { IngredientType } from "@/src/interfaces/ingredient";
 import { FaArrowLeftLong, FaPlus } from "react-icons/fa6";
@@ -15,8 +15,9 @@ import { VscClearAll } from "react-icons/vsc";
 import ShoppingItemForm from "./reusable/kitchen/shopping/shopping-item-form";
 import { ListItem } from "@/src/interfaces/list-item";
 import { BsBag } from "react-icons/bs";
-import { FiFilter } from "react-icons/fi";
+import { VscFilter, VscFilterFilled } from "react-icons/vsc";
 import FilterForm from "./reusable/kitchen/dish/filter-form";
+import { TbBulb, TbBulbFilled } from "react-icons/tb"
 
 type propType = {
     ingredients: IngredientType[],
@@ -72,8 +73,10 @@ const Kitchen = (props: propType) => {
     const [openFilterModal, setOpenFilterModal] = useState <boolean> (false);
     const [filterForm, setFilterForm] = useState <{ ingredients: IngredientType[] }> (initialFilterForm);
 
-    const [openIngredientModal, setOpenIngredientModal] = useState <boolean> (false);
     const [suggestedDish, setSuggestedDish] = useState <DishType | null> (null);
+    const [suggestedDishMessage, setSuggestedDishMessage] = useState <string> ('');
+
+    const [openIngredientModal, setOpenIngredientModal] = useState <boolean> (false);
     const [createEntry, setCreateEntry] = useState <boolean> (false);
 
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -189,6 +192,7 @@ const Kitchen = (props: propType) => {
 
     const handleSelectRandomDish = () => {
         const randomDish = dishes[Math.floor(Math.random()*dishes.length)];
+        setSuggestedDishMessage("This suggestion selects a dish randomly from all the available dishes");
         setSuggestedDish(randomDish);
     }
 
@@ -207,6 +211,7 @@ const Kitchen = (props: propType) => {
             console.log("Bad time to eat!")
         }
         const randomDish = timedMenu[Math.floor(Math.random()*timedMenu.length)];
+        setSuggestedDishMessage("This suggestion takes into consideration the applied filters and what time of the day it is");
         setSuggestedDish(randomDish);
     }
 
@@ -402,6 +407,9 @@ const Kitchen = (props: propType) => {
 
     const handleFilter = () => {
         setOpenFilterModal(true);
+        setCreateEntry(false);
+        setDishForm(initialDishForm);
+        setIngredientForm(initialIngredientForm);
     }
 
     const handleSaveFilter = () => {
@@ -432,7 +440,7 @@ const Kitchen = (props: propType) => {
     }
 
     return (
-        <Flex pl={2} pr={2} height="calc(100vh - 150px)" position={"relative"} direction={"column"}>
+        <Flex pl={2} pr={2} height={{md: "calc(100vh - 150px)", base: "calc(100vh - 100px)"}} position={"relative"} direction={"column"}>
             {openIngredientModal ? (
                 <Modal closeOnOverlayClick={false} blockScrollOnMount={false} isOpen={openIngredientModal} onClose={() => setOpenIngredientModal(false)} isCentered>
                 <ModalOverlay
@@ -470,7 +478,7 @@ const Kitchen = (props: propType) => {
             </Modal>
             ) : null}
             {suggestedDish !== null ? (
-                <Modal closeOnOverlayClick={false} blockScrollOnMount={false} isOpen={suggestedDish !== null} onClose={() => setSuggestedDish(null)} isCentered>
+                <Modal closeOnOverlayClick={false} blockScrollOnMount={false} isOpen={suggestedDish !== null} onClose={() => {setSuggestedDish(null); setSuggestedDishMessage('');}} isCentered>
                 <ModalOverlay
                     bg='blackAlpha.300'
                     backdropFilter='blur(13px) hue-rotate(90deg)'
@@ -482,6 +490,9 @@ const Kitchen = (props: propType) => {
                             <Heading mb={5}>{suggestedDish.name}</Heading>
                             <BiLike cursor={"pointer"} size={25} style={{ position:"absolute", right: "40px", top: "10px" }}/>
                             <BiDislike cursor={"pointer"} size={25} style={{ position:"absolute", right: "10px", top: "10px" }}/>
+                            <Tooltip p={5} rounded={10} label={suggestedDishMessage}>
+                                <IconButton position="absolute" right= "10px" bottom= "10px" aria-label={""} icon={<TbBulb />} />
+                            </Tooltip>
                         </Flex>
                     </Flex>
                     <ModalCloseButton left={3} top={3} size={"md"} color={"white"}/>
@@ -490,7 +501,7 @@ const Kitchen = (props: propType) => {
             ) : null}
             {activeComponent !== "" ? 
                 <Show breakpoint='(max-width: 530px)'>
-                    <Box mt={2} mb={2} display={"flex"} flexDirection={"row"} justifyContent={"space-between"}>
+                    <Box mt={2} mb={2} display={"flex"} flexDirection={"row"} justifyContent={"space-between"} shadow={"xl"}>
                         {activeComponent !== '' ? (
                             <Tooltip label="Menu">
                                 <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={handleBackButton}>
@@ -521,7 +532,7 @@ const Kitchen = (props: propType) => {
                         {activeComponent === 'Dishes' ? (
                             <Tooltip label="Filter">
                                 <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
-                                    <FiFilter size={30}/>
+                                    {props.dishes.length === dishes.length ? <VscFilter size={30}/> : <VscFilterFilled size={30}/>}
                                 </Button>
                             </Tooltip>
                         ) : null}
@@ -610,25 +621,25 @@ const Kitchen = (props: propType) => {
                 </Show>
             : null}
             {activeComponent === '' ? (
-                    <Flex flex={1} justifyContent={"space-evenly"} alignItems={"center"} direction={{ md: "row", base: "column" }}>
-                        <Button onClick={() => setActiveComponent("Ingredients")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
+                    <Flex flex={1} justifyContent={"space-evenly"} alignItems={"center"} direction={{ md: "row", base: "column" }} overflowY={"scroll"}>
+                        <Button m={5} onClick={() => setActiveComponent("Ingredients")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
                             bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
                             alignItems={"center"} shadow={"xl"}>
                             <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>INGREDIENTS</Heading>
                         </Button>
-                        <Button onClick={() => setActiveComponent("Dishes")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
+                        <Button m={5} onClick={() => setActiveComponent("Dishes")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
                             bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
                             alignItems={"center"} shadow={"xl"}>
                             <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>DISHES</Heading>
                         </Button>
-                        <Button onClick={() => setActiveComponent("Shopping List")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
+                        <Button m={5} onClick={() => setActiveComponent("Shopping List")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
                             bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
                             alignItems={"center"} shadow={"xl"}>
                             <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>SHOPPING LIST</Heading>
                         </Button>
                     </Flex>
                 ) : activeComponent === 'Ingredients' ? (
-                    <Box maxHeight={"calc(100vh - 150px)"} minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
+                    <Box minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
                         <Flex wrap="wrap" justifyContent={"center"}>
                             {createEntry ? (
                                 <IngredientFormComponent
@@ -653,7 +664,7 @@ const Kitchen = (props: propType) => {
                         </Flex>
                     </Box>
                 ) : activeComponent === "Dishes" ? (
-                    <Box maxHeight={"calc(100vh - 150px)"} minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
+                    <Box minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
                         <Flex wrap="wrap" justifyContent={"center"}>
                             {createEntry ? (
                                 <DishFormComponent
@@ -673,7 +684,7 @@ const Kitchen = (props: propType) => {
                         </Flex>
                     </Box>
                 ) : activeComponent === "Shopping List" ? (
-                    <Box maxHeight={"calc(100vh - 150px)"} minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
+                    <Box minWidth={"100%"} overflowY={"scroll"} pl={20} pr={20}>
                         <Flex wrap="wrap" justifyContent={"center"}>
                             {createEntry ? (
                                 <ShoppingItemForm
@@ -719,7 +730,7 @@ const Kitchen = (props: propType) => {
                 {activeComponent === 'Dishes' ? (
                     <Tooltip label="Filter">
                         <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
-                            <FiFilter size={30}/>
+                            <VscFilter size={30}/>
                         </Button>
                     </Tooltip>
                 ) : null}

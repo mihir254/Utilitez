@@ -15,7 +15,7 @@ const IngredientFormComponent = (props: Proptype) => {
     return (
         props.ingredientForm && <Flex m={5} rounded={15} p={5} backgroundColor={props.openIngredientModal ? "black" : "blackAlpha.600"} justifyContent={"center"} alignItems={"center"} style={props.openIngredientModal ? {} : {boxShadow: "5px 5px 8px rgba(200, 200, 200, 0.5"}}>
             <Flex color={"white"} width={"300px"} direction={"column"} p={props.openIngredientModal ? 5 : 0} pr={2} position={"relative"}>
-                <Button onClick={props.handleSaveIngredient} isDisabled={props.initialIngredientForm === props.ingredientForm} bgColor={"white"} position={"absolute"} right={props.openIngredientModal ? -10 : 0} top={props.openIngredientModal ? -2 : 0} height={"50px"} width={"50px"} rounded={25}>
+                <Button onClick={props.handleSaveIngredient} isDisabled={props.initialIngredientForm === props.ingredientForm} bgColor={"white"} position={"absolute"} right={props.openIngredientModal ? {sm: -10, base: 0} : 0} top={props.openIngredientModal ? -2 : 0} height={"50px"} width={"50px"} rounded={25}>
                     <MdOutlineDone size={20}/>
                 </Button>
                 <Flex direction={"column"}>
