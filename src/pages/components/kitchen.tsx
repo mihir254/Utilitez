@@ -18,6 +18,8 @@ import { BsBag } from "react-icons/bs";
 import { VscFilter, VscFilterFilled } from "react-icons/vsc";
 import FilterForm from "./reusable/kitchen/dish/filter-form";
 import { TbBulb, TbBulbFilled } from "react-icons/tb"
+import { AiOutlineDelete } from "react-icons/ai";
+import { HeadersAdapter } from "next/dist/server/web/spec-extension/adapters/headers";
 
 type propType = {
     ingredients: IngredientType[],
@@ -439,6 +441,26 @@ const Kitchen = (props: propType) => {
         }));
     }
 
+    const handleMultipleIngredientsDelete = async () => {
+        if (selectedIngredients.length > 0) {
+            const idsToDelete = selectedIngredients.map((ingredient: IngredientType) => ingredient._id);
+            const queryString = idsToDelete.join('&ids=');
+            let ingredientsDeleteResult = await fetch(`/api/ingredients?ids=${queryString}`, {
+                method: "DELETE"
+            });
+            if (ingredientsDeleteResult.ok) {
+                setIngredients(previousIngredients => {
+                    const upgradedIngredients = previousIngredients.filter((ingredient: IngredientType) => {
+                        return !idsToDelete.includes(ingredient._id)
+                    });
+                    return upgradedIngredients;
+                });
+                setSelectedIngredients([]);
+                setIsSelection(false);
+            }
+        }
+    }
+
     return (
         <Flex pl={2} pr={2} height={{md: "calc(100vh - 150px)", base: "calc(100vh - 100px)"}} position={"relative"} direction={"column"}>
             {openIngredientModal ? (
@@ -490,7 +512,7 @@ const Kitchen = (props: propType) => {
                             <Heading mb={5}>{suggestedDish.name}</Heading>
                             <BiLike cursor={"pointer"} size={25} style={{ position:"absolute", right: "40px", top: "10px" }}/>
                             <BiDislike cursor={"pointer"} size={25} style={{ position:"absolute", right: "10px", top: "10px" }}/>
-                            <Tooltip p={5} rounded={10} label={suggestedDishMessage}>
+                            <Tooltip hasArrow p={5} rounded={10} label={suggestedDishMessage}>
                                 <IconButton position="absolute" right= "10px" bottom= "10px" aria-label={""} icon={<TbBulb />} />
                             </Tooltip>
                         </Flex>
@@ -723,6 +745,11 @@ const Kitchen = (props: propType) => {
                         <Tooltip label="Add to Shopping List">
                             <Button isDisabled={selectedIngredients.length===0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleMultipleIngredientsToList}>
                                 <BsBag size={30}/>
+                            </Button>
+                        </Tooltip>
+                        <Tooltip label="Delete Selected">
+                            <Button isDisabled={selectedIngredients.length===0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"260px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleMultipleIngredientsDelete}>
+                                <AiOutlineDelete size={30}/>
                             </Button>
                         </Tooltip>
                     </>

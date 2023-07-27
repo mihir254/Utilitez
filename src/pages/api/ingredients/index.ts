@@ -29,7 +29,6 @@ const editMultipleIngredients = async (db: Db, req: NextApiRequest, res: NextApi
         { _id: { $in: objectIDs } },
         { $set: { shoppingList: true } }
     );
-    console.log(updateResult);
     if (updateResult.modifiedCount > 0) {
         res.status(200).json({ message: "Ingredient updated succesfully" });
     } else {
@@ -37,8 +36,21 @@ const editMultipleIngredients = async (db: Db, req: NextApiRequest, res: NextApi
     }
 }
 
+const deleteMultipleIngredients = async (db: Db, req: NextApiRequest, res: NextApiResponse) => {
+    const { ids } = req.query;
+    const objectIDs = Array.isArray(ids) ? ids.map((id: string) => new ObjectId(id as string)) : [new ObjectId(ids as string)];
+    const deleteResult = await db?.collection("Ingredients").deleteMany({ _id: { $in: objectIDs } });
+    console.log(deleteResult);
+    if (deleteResult.deletedCount > 0) {
+        res.status(200).json({ message: "Ingredient deleted succesfully" });
+    } else {
+        res.status(404).json({ message: "Ingredient not found" });
+    }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
+        console.log("Here");
         const client = await clientPromise;
         const db = client?.db("KitchenDatabase");
         if (db) {
@@ -48,6 +60,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 createIngredient(db, req, res);
             } else if (req.method === 'PUT') {
                 editMultipleIngredients(db, req, res);
+            } else if (req.method === 'DELETE') {
+                deleteMultipleIngredients(db, req, res);
             } else {
                 res.status(405).json({ message: 'Method Not Allowed' });
             }
