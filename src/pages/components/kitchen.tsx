@@ -19,13 +19,15 @@ import { VscFilter, VscFilterFilled } from "react-icons/vsc";
 import FilterForm from "./reusable/kitchen/dish/filter-form";
 import { TbBulb, TbBulbFilled } from "react-icons/tb"
 import { AiOutlineDelete } from "react-icons/ai";
-import { HeadersAdapter } from "next/dist/server/web/spec-extension/adapters/headers";
+import { Red_Hat_Display } from "next/font/google";
 
 type propType = {
     ingredients: IngredientType[],
     dishes: DishType[],
     shoppingList: ListItem[],
 }
+
+const red_hat_display = Red_Hat_Display({ weight: "800", subsets: ["latin"] });
 
 const Kitchen = (props: propType) => {
     
@@ -647,17 +649,17 @@ const Kitchen = (props: propType) => {
                         <Button m={5} onClick={() => setActiveComponent("Ingredients")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
                             bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
                             alignItems={"center"} shadow={"xl"}>
-                            <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>INGREDIENTS</Heading>
+                            <Heading fontSize={{lg: "32px", md: "22px", base: "18px"}}><p className={red_hat_display.className}>INGREDIENTS</p></Heading>
                         </Button>
                         <Button m={5} onClick={() => setActiveComponent("Dishes")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
                             bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
                             alignItems={"center"} shadow={"xl"}>
-                            <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>DISHES</Heading>
+                            <Heading fontSize={{lg: "32px", md: "22px", base: "18px"}}><p className={red_hat_display.className}>DISHES</p></Heading>
                         </Button>
                         <Button m={5} onClick={() => setActiveComponent("Shopping List")} cursor={"pointer"} _hover={{ transform: "scale(1.02)" }}
                             bgColor={"whiteAlpha.800"} rounded={20} width={{lg: "300px", md: "230px", base: "180px"}} height={{lg: "300px", md: "230px", base: "180px"}} justifyContent={"center"}
                             alignItems={"center"} shadow={"xl"}>
-                            <Heading fontSize={{lg: "27px", md: "22px", base: "18px"}}>SHOPPING LIST</Heading>
+                            <Heading fontSize={{lg: "32px", md: "22px", base: "18px"}}><p className={red_hat_display.className}>SHOPPING LIST</p></Heading>
                         </Button>
                     </Flex>
                 ) : activeComponent === 'Ingredients' ? (
@@ -731,7 +733,7 @@ const Kitchen = (props: propType) => {
                 ) : null}
                 {activeComponent === 'Ingredients' ? !isSelection ? (
                     <Tooltip label="Select Multiple">
-                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={() => setIsSelection(true)}>
+                        <Button isDisabled={ingredients.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={() => setIsSelection(true)}>
                             <MdOutlineSelectAll size={30}/>
                         </Button>
                     </Tooltip>
@@ -756,21 +758,21 @@ const Kitchen = (props: propType) => {
                 ) : null}
                 {activeComponent === 'Dishes' ? (
                     <Tooltip label="Filter">
-                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
+                        <Button isDisabled={dishes.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"100px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleFilter}>
                             <VscFilter size={30}/>
                         </Button>
                     </Tooltip>
                 ) : null}
                 {activeComponent === 'Dishes' ? (
                     <Tooltip label="Random Dish">
-                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectRandomDish}>
+                        <Button isDisabled={dishes.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"180px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectRandomDish}>
                             <BiDish size={30}/>
                         </Button>
                     </Tooltip>
                 ) : null}
                 {activeComponent === 'Dishes' ? (
                     <Tooltip label="Filtered Random Dish">
-                        <Button _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"260px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectFilteredRandomDish}>
+                        <Button isDisabled={dishes.length === 0} _hover={{ transform: "scale(1.02)" }} bgColor={"white"} shadow={"xl"} position={"absolute"} top={"260px"} left={5} height={"60px"} width={"60px"} rounded={30} onClick={handleSelectFilteredRandomDish}>
                             <BiSolidDish size={30}/>
                         </Button>
                     </Tooltip>

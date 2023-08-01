@@ -9,12 +9,15 @@ import { DishType } from '../interfaces/dish';
 import { ListItem } from '../interfaces/list-item';
 import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import UtilityHome from './components/home';
+import { Red_Hat_Display, Lilita_One } from "next/font/google";
 
 type propType = {
   	allIngredients: IngredientType[],
 	allDishes: DishType[],
 	allListItems: ListItem[],
 }
+
+const red_hat_display = Lilita_One({weight: "400", subsets:["latin"]});
 
 const Home = (props: propType) => {
   const [activeComponent, setActiveComponent] = useState <string> ('Kitchen');
@@ -26,10 +29,10 @@ const Home = (props: propType) => {
 		<Flex userSelect={"none"} height={"145px"} boxShadow={"2xl"} alignItems={"center"} justifyContent={"space-between"} p={10} backgroundColor={"blackAlpha.700"}>
 			<Heading color={"whiteAlpha.800"}
 			// bgColor={{lg: "blue", md: "green", sm: "pink", base: "purple"}}
-			 onClick={() => setActiveComponent("Home")} cursor={"pointer"}>Utiliti-ez</Heading>
+			 onClick={() => setActiveComponent("Home")} cursor={"pointer"}><p className={red_hat_display.className}>Utiliti-ez</p></Heading>
 			<Flex justifyContent={"flex-end"}>
-			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("Kitchen")} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}>Kitchen</Heading>
-			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("String Manipulation")} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}>String Manipulation</Heading>
+			<Heading ml={10} mr={10} size={"xl"} cursor={"pointer"} onClick={() => setActiveComponent("Kitchen")} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>Kitchen</p></Heading>
+			<Heading ml={10} mr={10} size={"xl"} cursor={"pointer"} onClick={() => setActiveComponent("String Manipulation")} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>String Manipulation</p></Heading>
 			{/* <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("LeetCode")} color={activeComponent==="LeetCode" ? "whiteAlpha.800" : "whiteAlpha.500"}>LeetCode</Heading> */}
 			</Flex>
 		</Flex>
