@@ -10,6 +10,7 @@ import { ListItem } from '../interfaces/list-item';
 import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import UtilityHome from './components/home';
 import { Red_Hat_Display, Lilita_One } from "next/font/google";
+import Planner from './components/planner';
 
 type propType = {
   	allIngredients: IngredientType[],
@@ -27,12 +28,14 @@ const Home = (props: propType) => {
     props.allDishes && props.allIngredients ? <Flex direction={"column"} minHeight={"100vh"} backgroundColor={"blackAlpha.900"}>
       <Show above='md'>
 		<Flex userSelect={"none"} height={"145px"} boxShadow={"2xl"} alignItems={"center"} justifyContent={"space-between"} p={10} backgroundColor={"blackAlpha.700"}>
-			<Heading color={"whiteAlpha.800"}
+			<Heading color={"white"}
+			textDecoration={"underline"}
 			// bgColor={{lg: "blue", md: "green", sm: "pink", base: "purple"}}
 			 onClick={() => setActiveComponent("Home")} cursor={"pointer"}><p className={red_hat_display.className}>Utiliti-ez</p></Heading>
 			<Flex justifyContent={"flex-end"}>
-			<Heading ml={10} mr={10} size={"xl"} cursor={"pointer"} onClick={() => setActiveComponent("Kitchen")} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>Kitchen</p></Heading>
-			<Heading ml={10} mr={10} size={"xl"} cursor={"pointer"} onClick={() => setActiveComponent("String Manipulation")} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>String Manipulation</p></Heading>
+			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("Kitchen")} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>Kitchen</p></Heading>
+			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("String Manipulation")} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>String Manipulation</p></Heading>
+			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("Planner")} color={activeComponent==="Planner" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>Planner</p></Heading>
 			{/* <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("LeetCode")} color={activeComponent==="LeetCode" ? "whiteAlpha.800" : "whiteAlpha.500"}>LeetCode</Heading> */}
 			</Flex>
 		</Flex>
@@ -51,6 +54,7 @@ const Home = (props: propType) => {
 	  {activeComponent === "Home" && <UtilityHome />}
       {activeComponent === "Kitchen" && <Kitchen ingredients={props.allIngredients} dishes={props.allDishes} shoppingList={props.allListItems}/>}
       {activeComponent === "String Manipulation" && <StringManipulation />}
+      {activeComponent === "Planner" && <Planner />}
       {activeComponent === "LeetCode" && <LeetCode />}
     </Flex> : <Flex><Heading>Something Went Wrong</Heading></Flex>
   )
