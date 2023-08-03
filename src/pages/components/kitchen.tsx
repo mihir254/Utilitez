@@ -1,4 +1,4 @@
-import { Text, Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton, Tooltip, useDisclosure, AlertDialog, AlertDialogBody, AlertDialogCloseButton, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Hide, Show, IconButton } from "@chakra-ui/react"
+import { Text, Box, Button, Flex, Heading, ModalOverlay, Modal, ModalContent, ModalCloseButton, Tooltip, useDisclosure, AlertDialog, AlertDialogBody, AlertDialogCloseButton, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogOverlay, Hide, Show, IconButton, Toast, useToast, CloseButton } from "@chakra-ui/react"
 import { ChangeEvent, useRef, useState } from "react";
 import { IngredientType } from "@/src/interfaces/ingredient";
 import { FaArrowLeftLong, FaPlus } from "react-icons/fa6";
@@ -59,6 +59,8 @@ const Kitchen = (props: propType) => {
         // cuisine: '',
         ingredients: [],
     }
+
+    const toast = useToast();
 
     const [activeComponent, setActiveComponent] = useState <string> ('');
     
@@ -215,6 +217,10 @@ const Kitchen = (props: propType) => {
             console.log("Bad time to eat!")
         }
         const randomDish = timedMenu[Math.floor(Math.random()*timedMenu.length)];
+        if (!randomDish) {
+            handleSelectRandomDish();
+            return;
+        }
         setSuggestedDishMessage("This suggestion takes into consideration the applied filters and what time of the day it is");
         setSuggestedDish(randomDish);
     }
@@ -331,7 +337,28 @@ const Kitchen = (props: propType) => {
                     });
                 }
             }
+            toast({
+                title: "Item Deleted",
+                description: "The item was deleted successfully",
+                status: "success",
+                duration: 30000,
+                isClosable: true,
+                position: "bottom",
+                render: ({ onClose }) => (
+                    <Flex rounded={20} p={2} pr={5} bgColor={"black"} justifyContent={"space-evenly"} alignItems={"center"}>
+                        <CloseButton mr={5} onClick={onClose}/>
+                        <Text mr={8} color={"white"}>The item has been deleted</Text>
+                        <Button _hover={{ bgColor: "transparent", color: "whiteAlpha.800" }} bgColor={"transparent"} onClick={() => {onClose(); handleUndoListItemRemove();}} color={"whiteAlpha.600"}>
+                            Undo
+                        </Button>
+                    </Flex>
+                )
+            });
         }
+    }
+
+    const handleUndoListItemRemove = async () => {
+        
     }
 
     const handleIngredientSelection = (item: IngredientType) => {
@@ -501,7 +528,7 @@ const Kitchen = (props: propType) => {
                 </ModalContent>
             </Modal>
             ) : null}
-            {suggestedDish !== null ? (
+            {suggestedDish !== null && suggestedDish !== undefined ? (
                 <Modal closeOnOverlayClick={false} blockScrollOnMount={false} isOpen={suggestedDish !== null} onClose={() => {setSuggestedDish(null); setSuggestedDishMessage('');}} isCentered>
                 <ModalOverlay
                     bg='blackAlpha.300'

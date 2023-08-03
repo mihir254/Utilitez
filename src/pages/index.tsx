@@ -48,6 +48,7 @@ const Home = (props: propType) => {
 				bgColor={"black"} textAlign={"center"}>
 				<Heading p={5} ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => {setActiveComponent("Kitchen"); setOpenNav(false)}} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}>Kitchen</Heading>
 				<Heading p={5} ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => {setActiveComponent("String Manipulation"); setOpenNav(false)}} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}>String Manipulation</Heading>
+				<Heading p={5} ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => {setActiveComponent("Planner"); setOpenNav(false)}} color={activeComponent==="Planner" ? "whiteAlpha.800" : "whiteAlpha.500"}>Planner</Heading>
 			</Flex> : null}
 		</Flex>
 	  </Show>
