@@ -71,7 +71,7 @@ const Kitchen = (props: propType) => {
     const [dishForm, setDishForm] = useState <DishType> (initialDishForm);
 
     const [shoppingList, setShoppingList] = useState <ListItem[]> (props.shoppingList);
-    const [shoppingItemForm, setShoppingItemForm] = useState < ListItem > (initialShoppingItemForm);
+    const [shoppingItemForm, setShoppingItemForm] = useState <ListItem> (initialShoppingItemForm);
 
     const [selectedIngredients, setSelectedIngredients] = useState <IngredientType[]> ([]);
     const [isSelection, setIsSelection] = useState <boolean> (false);
@@ -341,14 +341,14 @@ const Kitchen = (props: propType) => {
                 title: "Item Deleted",
                 description: "The item was deleted successfully",
                 status: "success",
-                duration: 30000,
+                duration: 3000,
                 isClosable: true,
                 position: "bottom",
                 render: ({ onClose }) => (
                     <Flex rounded={20} p={2} pr={5} bgColor={"black"} justifyContent={"space-evenly"} alignItems={"center"}>
                         <CloseButton mr={5} onClick={onClose}/>
                         <Text mr={8} color={"white"}>The item has been deleted</Text>
-                        <Button _hover={{ bgColor: "transparent", color: "whiteAlpha.800" }} bgColor={"transparent"} onClick={() => {onClose(); handleUndoListItemRemove();}} color={"whiteAlpha.600"}>
+                        <Button _hover={{ bgColor: "transparent", color: "whiteAlpha.800" }} bgColor={"transparent"} onClick={() => {handleUndoListItemRemove(item); onClose();}} color={"whiteAlpha.600"}>
                             Undo
                         </Button>
                     </Flex>
@@ -357,8 +357,36 @@ const Kitchen = (props: propType) => {
         }
     }
 
-    const handleUndoListItemRemove = async () => {
-        
+    const handleUndoListItemRemove = async (item: ListItem) => {
+        let res = await fetch("/api/shopping-list", {
+            method: "POST",
+            body: JSON.stringify(item)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            setShoppingList(prev => [{...item, _id:data.message.insertedId}, ...prev]);
+            const ingredientListItem = ingredients.find((ingredient: IngredientType) => ingredient._id === item._id);
+            if (ingredientListItem) {
+                let res = await fetch(`/api/ingredients/${item._id}`, {
+                    method: "PUT",
+                    body: JSON.stringify({...ingredientListItem, shoppingList: true})
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log(data);
+                    setIngredients(previousIngredients => {
+                        const upgradedIngredients = previousIngredients.map((ingredient: IngredientType) => {
+                            if (ingredient._id === item._id) {
+                                return {...ingredientListItem, shoppingList: true}
+                            } else {
+                                return ingredient
+                            }
+                        });
+                        return upgradedIngredients;
+                    });
+                }
+            }
+        }
     }
 
     const handleIngredientSelection = (item: IngredientType) => {
@@ -882,3 +910,6 @@ const Kitchen = (props: propType) => {
 }
 
 export default Kitchen;
+
+
+// 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

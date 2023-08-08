@@ -50,7 +50,6 @@ const deleteMultipleIngredients = async (db: Db, req: NextApiRequest, res: NextA
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        console.log("Here");
         const client = await clientPromise;
         const db = client?.db("KitchenDatabase");
         if (db) {

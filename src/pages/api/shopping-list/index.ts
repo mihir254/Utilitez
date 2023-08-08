@@ -18,6 +18,7 @@ const getAllListItems = async (db: Db, req: NextApiRequest, res: NextApiResponse
 
 const createListItem = async (db: Db, req: NextApiRequest, res: NextApiResponse) => {
     const incomingData = JSON.parse(req.body);
+    console.log(incomingData);
     if (Array.isArray(incomingData)) {
         const insertItems = incomingData.map((item: ListItem) => ({_id: new ObjectId(item._id as string), itemName: item.itemName}));
         let newListItems = await db?.collection("Shopping List").insertMany(insertItems);
