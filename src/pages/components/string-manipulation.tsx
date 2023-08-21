@@ -1,12 +1,14 @@
-import { Flex, Card, Stack, FormControl, FormLabel, Input, Button, Heading, Box, useColorModeValue } from "@chakra-ui/react";
+import { Flex, Text, Stack, FormControl, FormLabel, Input, Button, Heading, Box, useColorModeValue, IconButton, useToast, CloseButton } from "@chakra-ui/react";
 import { useState } from "react";
 import axios from 'axios';
+import { PiCopySimpleBold } from "react-icons/pi";
 
 const StringManipulation = () => {
     const [text, setText] = useState('');
     const [del, setDel] = useState('');
     const [answer, setAnswer] = useState('...');
     const shadowColor = useColorModeValue('gray.200', 'white');
+    const toast = useToast();
 
     const runPython = async () => {
       try {
@@ -28,7 +30,24 @@ const StringManipulation = () => {
     const refreshScreen = () => {
       setText('');
       setDel('');
-      setAnswer('');
+      setAnswer('...');
+    }
+
+    const handleCopy = async () => {
+      try {
+        await navigator.clipboard.writeText(answer);
+        toast({
+          duration: 1500,
+          position: "bottom-left",
+          render: () => (
+            <Flex rounded={20} height={"40px"} width={"150px"} justifyContent={"center"} alignItems={"center"} bgColor={"blackAlpha.700"} color={"whiteAlpha.700"}>
+              <Text>Text Copied!</Text>
+            </Flex>
+          )
+      });
+      } catch (err) {
+        console.error("Failed to copy: ", err);
+      }
     }
     
     return (
@@ -63,14 +82,17 @@ const StringManipulation = () => {
                   </Flex>
               </Box>
               <Flex mt={10} direction={{md: "row", base: "column"}} justifyContent={"space-evenly"} alignItems={"center"}>
-                <Button mt={{md: 0, base: 5}} width={"100px"} onClick={runPython} backgroundColor={"#666"} mr={{md: 10, base: 0}} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>PY</Button>
+                <Button isDisabled mt={{md: 0, base: 5}} width={"100px"} onClick={runPython} backgroundColor={"#666"} mr={{md: 10, base: 0}} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>PY</Button>
                 <Button mt={{md: 0, base: 5}} width={"150px"} onClick={runTypeScript} colorScheme="teal" mr={{md: 10, base: 0}}>TS</Button>
                 <Button mt={{md: 0, base: 5}} width={"100px"} onClick={refreshScreen} backgroundColor={"#666"} _hover={{ backgroundColor: "#555" }} color={"whiteAlpha.800"}>Refresh</Button>
               </Flex>
         </Flex>
-        <Flex rounded={25} m={5} width={{md: "600px", base: "350px"}} p={10} justifyContent={"space-around"} alignItems={"center"} backgroundColor={"blackAlpha.900"}>
-          <Heading color={"whiteAlpha.800"} size={"md"}>{answer}</Heading>
-        </Flex>
+          <Flex rounded={25} m={5} width={{md: "600px", base: "350px"}} justifyContent={"space-between"} alignItems={"center"} backgroundColor={"blackAlpha.900"}>
+            <Flex justifyContent={"center"} alignItems={"center"} p={8} flex={1}>
+              <Heading color={"whiteAlpha.800"} size={"md"}>{answer}</Heading>
+            </Flex>
+            {answer !== "" && answer !== "..." ? <IconButton colorScheme="whiteAlpha" m={2} aria-label={""} onClick={handleCopy}><PiCopySimpleBold color="white" size={22} /></IconButton> : null}
+          </Flex>
       </Flex>
     )
 }

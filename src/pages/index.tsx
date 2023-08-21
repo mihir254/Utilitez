@@ -9,8 +9,7 @@ import { DishType } from '../interfaces/dish';
 import { ListItem } from '../interfaces/list-item';
 import { AiOutlineMenu, AiOutlineClose } from "react-icons/ai";
 import UtilityHome from './components/home';
-import { Red_Hat_Display, Lilita_One } from "next/font/google";
-import Planner from './components/planner';
+import { Tilt_Prism, Lilita_One } from "next/font/google";
 
 type propType = {
   	allIngredients: IngredientType[],
@@ -35,7 +34,6 @@ const Home = (props: propType) => {
 			<Flex justifyContent={"flex-end"}>
 			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("Kitchen")} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>Kitchen</p></Heading>
 			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("String Manipulation")} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>String Manipulation</p></Heading>
-			<Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("Planner")} color={activeComponent==="Planner" ? "whiteAlpha.800" : "whiteAlpha.500"}><p className={red_hat_display.className}>Planner</p></Heading>
 			{/* <Heading ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => setActiveComponent("LeetCode")} color={activeComponent==="LeetCode" ? "whiteAlpha.800" : "whiteAlpha.500"}>LeetCode</Heading> */}
 			</Flex>
 		</Flex>
@@ -48,14 +46,12 @@ const Home = (props: propType) => {
 				bgColor={"black"} textAlign={"center"}>
 				<Heading p={5} ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => {setActiveComponent("Kitchen"); setOpenNav(false)}} color={activeComponent==="Kitchen" ? "whiteAlpha.800" : "whiteAlpha.500"}>Kitchen</Heading>
 				<Heading p={5} ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => {setActiveComponent("String Manipulation"); setOpenNav(false)}} color={activeComponent==="String Manipulation" ? "whiteAlpha.800" : "whiteAlpha.500"}>String Manipulation</Heading>
-				<Heading p={5} ml={10} mr={10} size={"lg"} cursor={"pointer"} onClick={() => {setActiveComponent("Planner"); setOpenNav(false)}} color={activeComponent==="Planner" ? "whiteAlpha.800" : "whiteAlpha.500"}>Planner</Heading>
 			</Flex> : null}
 		</Flex>
 	  </Show>
 	  {activeComponent === "Home" && <UtilityHome />}
       {activeComponent === "Kitchen" && <Kitchen ingredients={props.allIngredients} dishes={props.allDishes} shoppingList={props.allListItems}/>}
       {activeComponent === "String Manipulation" && <StringManipulation />}
-      {activeComponent === "Planner" && <Planner />}
       {activeComponent === "LeetCode" && <LeetCode />}
     </Flex> : <Flex><Heading>Something Went Wrong</Heading></Flex>
   )

@@ -23,7 +23,9 @@ const DishComponent = (props: DishComponentProps) => {
     }
 
     return (
-        props.item && <Flex _hover={{ transform: "scale(1.01)" }} m={5} rounded={15} shadow={"2xl"} p={5} backgroundColor={"blackAlpha.600"} justifyContent={"center"} alignItems={"center"}>
+        props.item && <Flex _hover={{ transform: "scale(1.01)" }} m={5} rounded={15} shadow={"2xl"}
+        p={5} backgroundColor={"blackAlpha.600"} justifyContent={"center"} alignItems={"center"} borderLeft={"2px"}
+        borderColor={props.item.preferredMeal === "Breakfast" ? "#99d98c" : props.item.preferredMeal === "Lunch" ? "#34a0a4" : "#184e77"}>
             <Flex color={"white"} width={"300px"} direction={"column"} p={2} pl={5} position={"relative"}>
                 <Popover>
                     {({ isOpen, onClose }) => (
